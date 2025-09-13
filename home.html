@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TravelGen</title>
+</head>
+<body>
+    <h1>Welcome to TravelGen</h1>
+    <form action="/plan" method="post">
+        <label>Destination:</label>
+        <input type="text" name="destination" required><br><br>
+
+        <label>Travel Dates:</label>
+        <input type="text" name="dates" placeholder="e.g. March 10-20"><br><br>
+
+        <label>Style:</label>
+        <select name="style">
+            <option value="relaxing">Relaxing</option>
+            <option value="adventure">Adventure</option>
+            <option value="cultural">Cultural</option>
+            <option value="romantic">Romantic</option>
+        </select><br><br>
+
+        <button type="submit">Plan My Trip</button>
+    </form>
+</body>
+</html>
+
+
+<a href="/trips" style="
+    display: inline-block;
+    margin-top: 15px;
+    text-decoration: none;
+    background: #28a745;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;">
+    View Saved Trips
+</a
