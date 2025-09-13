@@ -1,5 +1,5 @@
 example_stay_listing = {
-    "location": "Paris, France",
+    "location": "Boston, USA",
     "safety": "High",
     "housing_type": "Hotel",
     "rental_type": "Private",
@@ -10,7 +10,7 @@ example_stay_listing = {
 }
 
 example_stay_listing2 = {
-    "location": "Tokyo, Japan",
+    "location": "Boston, USA",
     "safety": "Medium",
     "housing_type": "2-bedroom House",
     "rental_type": "Private",
@@ -21,7 +21,7 @@ example_stay_listing2 = {
 }
 
 example_stay_listing3 = {
-    "location": "Seoul, South Korea",
+    "location": "Boston, USA",
     "safety": "Low",
     "housing_type": "Hostel",
     "rental_type": "Private",
@@ -32,7 +32,7 @@ example_stay_listing3 = {
 }
 
 example_stay_listing4 = {
-    "location": "Maui, Hawaii",
+    "location": "Boston, USA",
     "safety": "High",
     "housing_type": "2-bedroom House",
     "rental_type": "Entire",
