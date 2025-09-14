@@ -2,6 +2,8 @@ CoZ is an AI-powered travel agent and short term house rental site. This website
 Whether you want to take a trip locally or globally, our website can help you plan everything from your housing to your restaurants and even your excursions.
 Describe your perfect trip and swipe through options to your planned itinerary!
 
+Website runs locally from streamlit_app_new.py!
+
 Landing Page: Make an user account with all personal information 
 Information Page: Tell us more about yourself. Your age, life style related questions, how often you travel, your location preferences, ideal vacation style, etc. 
 
