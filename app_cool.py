@@ -1,6 +1,6 @@
-# 1. Preference: what type of housing - deetya
-# 2. Input travel plans: what dates, what location - deetya
-# 3. Agent to propose staying options - yuga's api 
+# 1. Preference: what type of housing
+# 2. Input travel plans: what dates, what location
+# 3. Agent to propose staying options
 # 4. Presenting each option one by one and peope can swipe left or right 
 # 5. Agent that uses swipes to create a stay per day  
 
@@ -27,19 +27,38 @@ def filter_cuisine(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
 
 def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    return [e for e in experience_listings if e.get("location") == location and e.get("keyword") in user_preferences["experience_types"]]
+    experience_types = user_preferences.get("experience_types", [])
+    
+    def keyword_matches(exp_keyword, search_types):
+        if not search_types:
+            return True
+        # Handle plural/singular matching
+        for search_type in search_types:
+            if exp_keyword.lower() in search_type.lower() or search_type.lower() in exp_keyword.lower():
+                return True
+            # Handle specific cases like "Museums" -> "Museum"
+            if search_type.lower().rstrip('s') == exp_keyword.lower() or exp_keyword.lower().rstrip('s') == search_type.lower():
+                return True
+        return False
+    
+    return [e for e in experience_listings if e.get("location") == location and keyword_matches(e.get("keyword", ""), experience_types)]
 
 def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
+    # Normalize location matching - handle "Boston" vs "Boston, USA"
+    location_city = location.split(',')[0].strip()
     # dates = travel_info.get("dates", [])
     # require all requested dates to be in scheduled_dates
     out = []
     for h in housing_listings:
-        if h.get("location") != location:
+        h_location = h.get("location", "")
+        h_city = h_location.split(',')[0].strip()
+        if h_city != location_city:
             continue
         # if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
         #     continue
-        if h.get("housing_type") not in user_preferences["housing_type"] or user_preferences["housing_type"] == []:
+        housing_types = user_preferences.get("housing_type", [])
+        if housing_types and h.get("housing_type") not in housing_types:
             continue
         # Match amenities from travel_info (desired_amenities)
         desired = set(travel_info.get("desired_amenities", []))
@@ -184,12 +203,14 @@ def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str
         if total_tool_uses < 3:
             raise RuntimeError("Insufficient tool usage before answering.")
         out = coerce_to_ListOut(text)
-    except Exception:
-        # Fallback: choose top-3 from whitelists
+    except Exception as e:
+        print(f"[AI Agent] Failed with error: {e}")
+        print("[AI Agent] Using fallback selection...")
+        # Fallback: choose top-5 from whitelists for better variety
         return ListOut(
-            housing_ids=list(valid_h)[:3],
-            cuisine_ids=list(valid_c)[:3],
-            experience_ids=list(valid_e)[:3],
+            housing_ids=list(valid_h)[:5],
+            cuisine_ids=list(valid_c)[:5],
+            experience_ids=list(valid_e)[:5],
         )
 
     # Guardrail: keep only IDs we offered
