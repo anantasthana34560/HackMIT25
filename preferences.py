@@ -4,5 +4,5 @@ user_preferences = {
     "safety_level": "High",
     "price_range": [50, 150],  # min and max per night
     "cuisine_types": ["Italian", "Japanese"],
-    "experience_types": ["Wine Tasting", "Eiffel Tower Tour"]
+    "experience_types": []
 }

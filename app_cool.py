@@ -22,11 +22,13 @@ class ListOut(BaseModel):
 # ===== Filters (fixed signatures & scoping) =====
 def filter_cuisine(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    return [c for c in cuisine_listings if c.get("location") == location]
+    cuisine_type = user_preferences["cuisine_types"]
+    return [c for c in cuisine_listings if c.get("location") == location and (c.get("cuisine_type") in cuisine_type or cuisine_type == [])]
 
 def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    return [e for e in experience_listings if e.get("location") == location]
+    experience_type = user_preferences["experience_types"]
+    return [e for e in experience_listings if e.get("location") == location and (e.get("experience_type") in experience_type or experience_type == [])]
 
 def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
@@ -36,8 +38,8 @@ def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
     for h in housing_listings:
         if h.get("location") != location:
             continue
-        if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
-            continue
+        # if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
+        #     continue
         out.append(h)
     return out
 
@@ -46,36 +48,50 @@ from agno.agent import Agent
 from agno.models.anthropic import Claude
 from agno.tools import tool
 
+housing_agent = []
+cuisine_agent = []
+experience_agent = []
 
 @tool(show_result=True)
 def view_housing_option(housing_id : str) -> dict:
     return housing_id_dict[housing_id]
 
 @tool(show_result=True)
+def view_cuisine_option(cuisine_id : str) -> dict:
+    return cuisine_id_dict[cuisine_id]
+
+@tool(show_result=True)
+def view_experience_option(experience_id : str) -> dict:
+    return experience_id_dict[experience_id]
+
+@tool(show_result=True)
 def add_housing_option(housing_option: str):
     if housing_option in housing_id_dict:
         return "Housing option already exists"
-    housing_listings.append(housing_option)
-    return housing_listings
+    housing_agent.append(housing_option)
+    return housing_agent
 
 @tool(show_result=True)
 def add_cuisine_option(cuisine_option: str):
     if cuisine_option in cuisine_id_dict:
         return "Cuisine option already exists"
-    cuisine_listings.append(cuisine_option)
-    return cuisine_listings
+    cuisine_agent.append(cuisine_option)
+    return cuisine_agent
 
 @tool(show_result=True)
 def add_experience_option(experience_option: str):
     if experience_option in experience_id_dict:
         return "Experience option already exists"
-    experience_listings.append(experience_option)
-    return experience_listings
+    experience_agent.append(experience_option)
+    return experience_agent
 
 def build_context(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     housing_opts = filter_housing(user_preferences, travel_info)
     cuisine_opts = filter_cuisine(user_preferences, travel_info)
     experience_opts = filter_experiences(user_preferences, travel_info)
+    print(f'housing_opts: {[x['id'] for x in housing_opts]}')
+    print(f'cuisine_opts: {[x['id'] for x in cuisine_opts]}')
+    print(f'experience_opts: {[x['id'] for x in experience_opts]}')
 
     # Keep context compact (IDs + a few fields). The model only needs IDs to choose.
     def slim(items, keep=("id", "name", "price", "tags")):
@@ -108,7 +124,13 @@ Here are the housing options: {housing_opts}
 Here are the cuisine options: {cuisine_opts}
 Here are the experience options: {experience_opts}
 
-You are an opportunities chooser model. You are not planning out the whole trip. Your job is to consider the possible housing, cuisine, and experience options avaialable, and if any of those look reasonably aligned with the user interests, track their ids. 
+You are an opportunities chooser model. You are not planning out the whole trip. Your job is to consider the possible housing, cuisine, and experience options avaialable, and if any of those look reasonably aligned with the user interests, track their ids.
+Do the following
+1. Look through the housing options and what they entail using the view_housing_option tool. If they seem to match the user's preferences, store them in housing_agent using the add_housing_option tool.
+2. Look through the cuisine options and what they entail using the view_cuisine_option tool. If they seem to match the user's preferences, store them in cuisine_agent using the add_cuisine_option tool.
+3. Look through the experience options and what they entail using the view_experience_option tool. If they seem to match the user's preferences, store them in experience_agent using the add_experience_option tool.
+
+Note that the housing ids are of the form "H#". The cuisine ids are of the form "C#". The experience ids are of the form "E#".
 
 YOU MUST return output as **JSON ONLY** conforming to this schema:
 {
@@ -120,14 +142,14 @@ YOU MUST return output as **JSON ONLY** conforming to this schema:
 Rules:
 - Use only IDs that appear in the provided options (do not invent IDs).
 - Do not include any extra fields or text.
-- If a list is empty, return [] for that list.
+- Never return an empty list for any of the fields, except housing_ids.
 - Do not add comments or prose; return a single JSON object only.
 """
 
     agent = Agent(model=Claude(id="claude-opus-4-1-20250805"))
     # If Agno supports schema binding directly, keep this:
     agent.output_schema = ListOut  # (Nice-to-have; we still validate below)
-    
+    agent.tools = [view_housing_option, view_cuisine_option, view_experience_option, add_housing_option, add_cuisine_option, add_experience_option]
     agent.print_response(SYSTEM_CONSTRAINTS)
 
     # --- Attempt 1
