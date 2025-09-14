@@ -1,5 +1,7 @@
 import asyncio
 from textwrap import dedent
+import os
+import csv
 
 from agno.agent import Agent
 from agno.tools.mcp import MCPTools
@@ -37,8 +39,48 @@ async def run_agent(message: str) -> None:
 
 
 if __name__ == "__main__":
+    # If run normally, run the agent demo
     task = dedent("""\
     I'm traveling to San Francisco from April 20th - May 8th. Can you find me the best deals for a 1 bedroom apartment?
     I'd like a dedicated workspace and close proximity to public transport.\
     """)
     asyncio.run(run_agent(task))
+
+    # Additionally, add keywords to the experiences CSV
+    def categorize_keyword(text: str) -> str:
+        t = (text or "").lower()
+        if any(k in t for k in ["comedy", "improv", "stand-up", "stand up", "laugh"]):
+            return "Comedy"
+        if any(k in t for k in ["class", "workshop", "lesson", "course", "lecture", "science", "robotics", "stem"]):
+            return "Education"
+        if any(k in t for k in ["museum", "exhibit", "gallery", "observatory", "planetarium"]):
+            return "Museum"
+        if any(k in t for k in ["tour", "cruise", "view", "sightseeing", "panoramic", "observatory", "walk", "trail"]):
+            return "Sightseeing"
+        if any(k in t for k in ["kayak", "kayaking", "bike", "biking", "hike", "hiking", "adventure", "boat", "canoe", "zipline"]):
+            return "Adventure"
+        if any(k in t for k in ["historic", "history", "historical", "freedom trail", "old state", "colonial", "presidential", "tour of"]):
+            return "Historic"
+        if any(k in t for k in ["picnic", "tea", "relax", "quiet", "garden", "courtyard"]):
+            return "Relaxing"
+        return "Sightseeing"
+
+    def add_keyword_column(input_csv: str, output_csv: str) -> None:
+        with open(input_csv, newline='', encoding='utf-8') as fin, open(output_csv, 'w', newline='', encoding='utf-8') as fout:
+            reader = csv.DictReader(fin)
+            fieldnames = reader.fieldnames + ["Keyword"] if reader.fieldnames and "Keyword" not in reader.fieldnames else reader.fieldnames
+            writer = csv.DictWriter(fout, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in reader:
+                text = row.get('Experience Description') or row.get('Company Name') or ' '.join(str(v) for v in row.values())
+                row["Keyword"] = categorize_keyword(text)
+                writer.writerow(row)
+
+    base = os.path.dirname(__file__)
+    inp = os.path.join(base, "100 experiences in boston - ok. now can you do 100  experiences and 100 resta....csv")
+    outp = os.path.join(base, "experiences_with_keywords.csv")
+    try:
+        add_keyword_column(inp, outp)
+        print(f"Wrote {outp}")
+    except FileNotFoundError:
+        print("Experiences CSV not found; skipping keyword generation.")

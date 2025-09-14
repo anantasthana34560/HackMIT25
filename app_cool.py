@@ -27,7 +27,7 @@ def filter_cuisine(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
 
 def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    return [e for e in experience_listings if e.get("location") == location]
+    return [e for e in experience_listings if e.get("location") == location and e.get("keyword") in user_preferences["experience_types"]]
 
 def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
@@ -94,7 +94,7 @@ def build_context(user_preferences: Dict[str, Any], travel_info: Dict[str, Any])
     print("experience_opts:", [x["id"] for x in experience_opts])
 
     # Keep context compact (IDs + a few fields). The model only needs IDs to choose.
-    def slim(items, keep=("id", "location", "housing_type", "cuisine_type", "experience", "pricing", "cost_per_night", "amenities", "safety")):
+    def slim(items, keep=("id", "location", "housing_type", "cuisine_type", "experience", "amenities", "safety")):
         return [{k: v for k, v in item.items() if k in keep} for item in items]
 
     ctx = {
@@ -152,9 +152,9 @@ def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str
     USER = {
         "preferences": user_preferences,
         "travel_info": travel_info,
-        "housing_options": [{"id": h["id"], "safety": h.get("safety"), "amenities": h.get("amenities", []), "cost_per_night": h.get("cost_per_night")} for h in housing_opts],
-        "cuisine_options": [{"id": c["id"], "cuisine_type": c.get("cuisine_type"), "pricing": c.get("pricing")} for c in cuisine_opts],
-        "experience_options": [{"id": e["id"], "experience": e.get("experience"), "pricing": e.get("pricing")} for e in experience_opts],
+        "housing_options": [{"id": h["id"], "safety": h.get("safety"), "amenities": h.get("amenities", [])} for h in housing_opts],
+        "cuisine_options": [{"id": c["id"], "cuisine_type": c.get("cuisine_type")} for c in cuisine_opts],
+        "experience_options": [{"id": e["id"], "experience": e.get("experience")} for e in experience_opts],
         "schema": {"housing_ids": [], "cuisine_ids": [], "experience_ids": []},
         "few_shot_example": {"input": {"user": example_user, "options": example_options}, "output": example_output},
         "tool_requirement": "Call view_housing_option, view_cuisine_option, and view_experience_option for at least 3 total items before answering.",
@@ -193,7 +193,7 @@ def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str
 if __name__ == "__main__":
     from preferences import user_preferences
     from travel_info import travel_info
-    ai_travel_agent_agno(user_preferences, travel_info)
+    print(ai_travel_agent_agno(user_preferences, travel_info))
 
 # def update_user_profile(user_profile, house, liked):
 #     if liked:

@@ -1,158 +1,79 @@
-housing_listings = [
-    {
-        "id" : "H1",
-        "location": "Boston, USA",
-        "safety": "High",
-        "housing_type": "Hotel",
-        "rental_type": "Private",
-        "cost_per_night": 50,
-        "amenities": ["Walking", "Eating", "Shopping"],
-        "scheduled_dates": ['2025-01-01', '2025-01-02', '2025-01-03'],
-        "reviews": ["Great place to stay", "Bad place to stay", "Average place to stay"],
-    },
-    {
-        "id" : "H2",
-        "location": "Boston, USA",
-        "safety": "Medium",
-        "housing_type": "2-bedroom House",
-        "rental_type": "Private",
-        "cost_per_night": 80,
-        "amenities": ["WiFi", "Kitchen", "Balcony"],
-        "scheduled_dates": ['2025-02-10', '2025-02-11', '2025-02-12'],
-        "reviews": ["Cozy and clean", "Nice host", "Would stay again"],
-    },
-    {
-        "id" : "H3",
-        "location": "Boston, USA",
-        "safety": "Low",
-        "housing_type": "Hostel",
-        "rental_type": "Private",
-        "cost_per_night": 25,
-        "amenities": ["Shared Room", "Breakfast", "Lockers"],
-        "scheduled_dates": ['2025-03-15', '2025-03-16', '2025-03-17'],
-        "reviews": ["Good for backpackers", "Noisy at night", "Friendly staff"],
-    },
-    {
-        "id" : "H4",
-        "location": "Boston, USA",
-        "safety": "High",
-        "housing_type": "2-bedroom House",
-        "rental_type": "Entire",
-        "cost_per_night": 150,
-        "amenities": ["Pool", "Spa", "Beach Access"],
-        "scheduled_dates": ['2025-04-20', '2025-04-21', '2025-04-22'],
-        "reviews": ["Luxurious experience", "Great amenities", "Expensive but worth it"],
-    },
-    {
-        "id": "H5",
-        "location": "San Francisco, USA",
-        "safety": "High",
-        "housing_type": "Studio Apartment",
-        "rental_type": "Entire",
-        "cost_per_night": 200,
-        "amenities": ["WiFi", "Kitchen", "Washer", "City View"],
-        "scheduled_dates": ['2025-05-10', '2025-05-11', '2025-05-12'],
-        "reviews": ["Great location", "Modern and clean", "Bit noisy at night"],
-    },
-    {
-        "id": "H6",
-        "location": "Paris, France",
-        "safety": "Medium",
-        "housing_type": "Hotel",
-        "rental_type": "Private",
-        "cost_per_night": 120,
-        "amenities": ["WiFi", "Breakfast", "Elevator"],
-        "scheduled_dates": ['2025-06-01', '2025-06-02', '2025-06-03'],
-        "reviews": ["Walkable to sights", "Charming decor", "Small rooms"],
-    },
-    {
-        "id": "H7",
-        "location": "Tokyo, Japan",
-        "safety": "High",
-        "housing_type": "Capsule Hotel",
-        "rental_type": "Private",
-        "cost_per_night": 60,
-        "amenities": ["WiFi", "Shared Bath", "Locker"],
-        "scheduled_dates": ['2025-07-14', '2025-07-15', '2025-07-16'],
-        "reviews": ["Unique experience", "Very clean", "Compact space"],
-    },
-    {
-        "id": "H8",
-        "location": "Reykjavik, Iceland",
-        "safety": "High",
-        "housing_type": "Cottage",
-        "rental_type": "Entire",
-        "cost_per_night": 180,
-        "amenities": ["Kitchen", "Fireplace", "Parking"],
-        "scheduled_dates": ['2025-08-20', '2025-08-21', '2025-08-22'],
-        "reviews": ["Cozy and scenic", "Great for Northern Lights", "Quiet area"],
-    },
-    {
-        "id": "H9",
-        "location": "Cairo, Egypt",
-        "safety": "Medium",
-        "housing_type": "Guesthouse",
-        "rental_type": "Private",
-        "cost_per_night": 40,
-        "amenities": ["Air Conditioning", "Breakfast", "Rooftop"],
-        "scheduled_dates": ['2025-09-05', '2025-09-06', '2025-09-07'],
-        "reviews": ["Friendly host", "Great value", "Basic amenities"],
-    },
-    {
-        "id": "H10",
-        "location": "Marrakesh, Morocco",
-        "safety": "Medium",
-        "housing_type": "Riad",
-        "rental_type": "Entire",
-        "cost_per_night": 90,
-        "amenities": ["Courtyard", "WiFi", "Breakfast"],
-        "scheduled_dates": ['2025-10-10', '2025-10-11', '2025-10-12'],
-        "reviews": ["Beautiful interiors", "Authentic stay", "Can be hard to find"],
-    },
-    {
-        "id": "H11",
-        "location": "Bali, Indonesia",
-        "safety": "High",
-        "housing_type": "Villa",
-        "rental_type": "Entire",
-        "cost_per_night": 220,
-        "amenities": ["Pool", "Kitchen", "Garden"],
-        "scheduled_dates": ['2025-11-01', '2025-11-02', '2025-11-03'],
-        "reviews": ["Relaxing retreat", "Great staff", "Private and spacious"],
-    },
-    {
-        "id": "H12",
-        "location": "New York, USA",
-        "safety": "Low",
-        "housing_type": "Hostel",
-        "rental_type": "Private",
-        "cost_per_night": 35,
-        "amenities": ["WiFi", "Shared Kitchen", "Lounge"],
-        "scheduled_dates": ['2025-12-15', '2025-12-16', '2025-12-17'],
-        "reviews": ["Budget friendly", "Social vibe", "Shared facilities"],
-    },
-    {
-        "id": "H13",
-        "location": "Zurich, Switzerland",
-        "safety": "High",
-        "housing_type": "Hotel",
-        "rental_type": "Private",
-        "cost_per_night": 250,
-        "amenities": ["WiFi", "Gym", "Lake View"],
-        "scheduled_dates": ['2026-01-10', '2026-01-11', '2026-01-12'],
-        "reviews": ["Spotless rooms", "Great breakfast", "Pricey but worth it"],
-    },
-    {
-        "id": "H14",
-        "location": "Mexico City, Mexico",
-        "safety": "Medium",
-        "housing_type": "2-bedroom House",
-        "rental_type": "Entire",
-        "cost_per_night": 85,
-        "amenities": ["Kitchen", "Washer", "Patio"],
-        "scheduled_dates": ['2026-02-20', '2026-02-21', '2026-02-22'],
-        "reviews": ["Spacious and central", "Quiet street", "Comfortable beds"],
-    },
+import pandas as pd
+import random
+
+# --- Configuration ---
+NUM_ROWS = 200
+BOSTON_NEIGHBORHOODS = [
+    "Allston", "Back Bay", "Bay Village", "Beacon Hill", "Brighton",
+    "Charlestown", "Chinatown", "Dorchester", "Downtown", "East Boston",
+    "Fenway-Kenmore", "Hyde Park", "Jamaica Plain", "Mattapan",
+    "Mission Hill", "North End", "Roslindale", "Roxbury", "South Boston",
+    "South End", "West End", "West Roxbury"
 ]
+HOUSING_TYPES = ["Apartment", "House", "Condo", "Townhouse", "Loft"]
+RENTAL_TYPES = ["Entire place", "Private room", "Shared room"]
+AMENITIES_LIST = [
+    "Kitchen", "Washer", "Dryer", "WiFi", "TV", "Air conditioning",
+    "Heating", "Dedicated workspace", "Free parking", "Patio", "Gym",
+    "Pool", "Hot tub", "Self check-in", "Pets allowed"
+]
+REVIEW_SNIPPETS = [
+    "Spacious and central", "Quiet street", "Comfortable beds",
+    "Great host, very responsive", "Clean and tidy", "Amazing view",
+    "Close to public transport", "Perfect for a weekend getaway",
+    "Felt like a home away from home", "Would definitely stay again",
+    "The place was sparkling clean.", "Host provided great local tips.",
+    "Easy check-in process.", "Great value for the price.",
+    "Stylish and modern apartment."
+]
+
+# --- Data Generation ---
+data = []
+for _ in range(NUM_ROWS):
+    housing_type = random.choice(HOUSING_TYPES)
+    bedrooms = random.randint(1, 5)
+    bathrooms = random.randint(1, max(1, bedrooms - 1))
+    beds = random.randint(bedrooms, bedrooms * 2)
+    rental_type = random.choice(RENTAL_TYPES)
+
+    # Determine cost based on features
+    base_cost = 80
+    cost = base_cost + (bedrooms * 50) + (bathrooms * 25)
+    if rental_type == "Private room":
+        cost *= 0.6
+    elif rental_type == "Shared room":
+        cost *= 0.4
+    cost += random.randint(-20, 20) # Add some noise
+    cost = int(round(cost / 5) * 5) # Round to nearest 5
+
+    listing = {
+        "safety_rating": round(random.uniform(3.5, 5.0), 2),
+        "neighborhood": random.choice(BOSTON_NEIGHBORHOODS),
+        "housing_type": housing_type,
+        "bedrooms": bedrooms,
+        "bathrooms": bathrooms,
+        "beds": beds,
+        "rental_type": rental_type,
+        "cost_per_night": cost,
+        "amenities": random.sample(AMENITIES_LIST, k=random.randint(4, 10)),
+        "reviews": random.sample(REVIEW_SNIPPETS, k=random.randint(2, 5))
+    }
+    data.append(listing)
+
+# --- Create and Save DataFrame ---
+df = pd.DataFrame(data)
+
+# Convert lists to strings for CSV compatibility
+df['amenities'] = df['amenities'].apply(lambda x: ', '.join(x))
+df['reviews'] = df['reviews'].apply(lambda x: '; '.join(x))
+
+
+# Save to a file
+df.to_csv("boston_airbnb_data.csv", index=False)
+
+print("Successfully generated boston_airbnb_data.csv with 200 listings.")
+
+
+housing_listings = df.to_dict(orient='records')
 
 housing_id_dict = {a['id']: a for a in housing_listings}
