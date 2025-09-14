@@ -8,6 +8,7 @@ from PIL import Image
 import io
 import requests
 from extractor import extract_travel_info
+import json
 from app_cool import ai_travel_agent_agno, second_stage_agent
 from housing_listings import housing_id_dict
 from cuisine_listings import cuisine_id_dict
@@ -591,7 +592,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# API Configuration
+# API Configuration (set to False to disable backend calls and use local fallbacks)
+USE_BACKEND = True
 API_BASE_URL = "http://localhost:5000/api"
 
 class TravelEaseApp:
@@ -658,7 +660,9 @@ class TravelEaseApp:
             st.session_state.host_properties = []
 
     def make_api_request(self, endpoint, data=None):
-        """Make API request to Flask backend"""
+        """Make API request to Flask backend (no-op if USE_BACKEND is False)."""
+        if not USE_BACKEND:
+            return None
         try:
             if data:
                 response = requests.post(f"{API_BASE_URL}{endpoint}", json=data)
@@ -666,10 +670,10 @@ class TravelEaseApp:
                 response = requests.get(f"{API_BASE_URL}{endpoint}")
             return response.json()
         except requests.exceptions.ConnectionError:
-            st.error("⚠️ Cannot connect to backend. Please make sure the Flask server is running on port 5000.")
+            st.info("Backend disabled or unavailable. Using local fallbacks.")
             return None
         except Exception as e:
-            st.error(f"API Error: {str(e)}")
+            st.info(f"Backend error: {str(e)}. Using local fallbacks.")
             return None
 
     def render_landing_page(self):
@@ -722,9 +726,8 @@ class TravelEaseApp:
                                 preferences = self.db.get_user_preferences(user['id'])
                                 if preferences:
                                     st.session_state.user_preferences = preferences
-                                    st.session_state.current_step = 'step1'
-                                else:
-                                    st.session_state.current_step = 'preferences'
+                                # Simplified flow: jump straight to AI planner
+                                st.session_state.current_step = 'ai_planner'
 
                                 st.success(f"Welcome back, {user['first_name']}!")
                                 st.rerun()
@@ -819,7 +822,8 @@ class TravelEaseApp:
                                 st.session_state.is_host = True
 
                             st.session_state.user_registered = True
-                            st.session_state.current_step = 'preferences'
+                            # Simplified flow: jump straight to AI planner
+                            st.session_state.current_step = 'ai_planner'
                             st.success("Account created successfully! Let's learn more about your travel preferences.")
                             st.rerun()
                         else:
@@ -1041,11 +1045,13 @@ class TravelEaseApp:
                     'travel_plans': travel_plans_serializable
                 }
 
-                # Call the Flask backend for AI recommendations
-                ai_result = self.make_api_request("/ai-agent", {
-                    "query": f"I want to travel to {destination_input}. Suggest 12 specific destinations with details including name, description, best time to visit, and average temperature.",
-                    "preferences": travel_preferences
-                })
+                # Optionally call the Flask backend for AI recommendations (disabled by default)
+                ai_result = None
+                if USE_BACKEND:
+                    ai_result = self.make_api_request("/ai-agent", {
+                        "query": f"I want to travel to {destination_input}. Suggest 12 specific destinations with details including name, description, best time to visit, and average temperature.",
+                        "preferences": travel_preferences
+                    })
 
                 if ai_result and ai_result.get('success') and ai_result.get('recommendations'):
                     # Use AI-generated recommendations
@@ -1777,35 +1783,12 @@ class TravelEaseApp:
             st.session_state.current_step = 'ai_planner'
             st.rerun()
 
-        # Progress indicator for travel planning
-        if st.session_state.current_step not in ['landing', 'preferences', 'host']:
-            progress_steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7']
-            current_index = progress_steps.index(st.session_state.current_step) if st.session_state.current_step in progress_steps else 0
-            progress = (current_index + 1) / len(progress_steps)
-
-            st.progress(progress)
-            st.markdown(f"**Step {current_index + 1} of {len(progress_steps)}**")
-            st.markdown("---")
+        # Simplified flow: no multi-step progress bar
 
         # Route to appropriate page based on current step
         if not st.session_state.user_registered:
             self.render_landing_page()
-        elif st.session_state.current_step == 'preferences':
-            self.render_preferences_page()
-        elif st.session_state.current_step == 'step1':
-            self.render_step1_travel_wishes()
-        elif st.session_state.current_step == 'step2':
-            self.render_step2_destination()
-        elif st.session_state.current_step == 'step3':
-            self.render_step3_transportation()
-        elif st.session_state.current_step == 'step4':
-            self.render_step4_accommodation()
-        elif st.session_state.current_step == 'step5':
-            self.render_step5_cuisine()
-        elif st.session_state.current_step == 'step6':
-            self.render_step6_experiences()
-        elif st.session_state.current_step == 'step7':
-            self.render_step7_itinerary()
+        # Only keep simplified planner
         elif st.session_state.current_step == 'host':
             self.render_host_interface()
         elif st.session_state.current_step == 'ai_planner':
@@ -1861,6 +1844,20 @@ class TravelEaseApp:
                     'experience_preferences': user_prefs['experience_types'],
                 }
 
+                # Debug: print extracted preferences and built dicts to terminal
+                try:
+                    print("[AI Planner] Extracted (raw):\n" + json.dumps(extracted, indent=2, ensure_ascii=False))
+                except Exception:
+                    print("[AI Planner] Extracted (raw):", extracted)
+                try:
+                    print("[AI Planner] User Prefs (built):\n" + json.dumps(user_prefs, indent=2, ensure_ascii=False))
+                except Exception:
+                    print("[AI Planner] User Prefs (built):", user_prefs)
+                try:
+                    print("[AI Planner] Travel Info (built):\n" + json.dumps(travel_info, indent=2, ensure_ascii=False))
+                except Exception:
+                    print("[AI Planner] Travel Info (built):", travel_info)
+
                 with st.spinner('Running agent...'):
                     recs = ai_travel_agent_agno(user_prefs, travel_info)
 
@@ -1893,14 +1890,37 @@ class TravelEaseApp:
                         st.warning(f"Missing {_id}")
                         st.session_state.ai_idx[key] = idx + 1
                         st.rerun()
-                    st.write(f"ID: `{_id}`")
+                    # Rich card display with real details instead of only the ID
                     if key == 'housing':
-                        st.write(item.get('housing_type', 'Stay'), '·', item.get('neighborhood', item.get('location','')))
-                        st.caption(", ".join(item.get('amenities', [])))
+                        title = f"{item.get('housing_type','Stay')} · {item.get('neighborhood', item.get('location',''))}"
+                        amenities = item.get('amenities', [])
+                        if isinstance(amenities, str):
+                            amenities = [a.strip() for a in amenities.split(',') if a.strip()]
+                        amen_str = ", ".join(amenities[:6]) + (" …" if len(amenities) > 6 else "")
+                        safety = item.get('safety') or item.get('safety_rating')
+                        reviews = item.get('reviews', [])
+                        if isinstance(reviews, str):
+                            reviews = [r.strip() for r in reviews.split(';') if r.strip()]
+                        st.markdown(f"**{title}**")
+                        if safety:
+                            st.caption(f"Safety: {safety}")
+                        if amen_str:
+                            st.caption(f"Amenities: {amen_str}")
+                        if reviews:
+                            st.write(f"“{reviews[0]}”")
+                        st.code(_id)
                     elif key == 'cuisine':
-                        st.write(item.get('cuisine_type', 'Cuisine'), '·', item.get('location',''))
+                        st.markdown(f"**{item.get('cuisine_type','Cuisine')}** · {item.get('location','')}")
+                        kind = item.get('pricing')
+                        if kind:
+                            st.caption(f"Style: {kind}")
+                        st.code(_id)
                     else:
-                        st.write(item.get('experience','Experience'), '·', item.get('location',''))
+                        st.markdown(f"**{item.get('experience','Experience')}** · {item.get('location','')}")
+                        kw = item.get('keyword')
+                        if kw:
+                            st.caption(f"Category: {kw}")
+                        st.code(_id)
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"👎 Pass {label}", key=f"pass_{key}_{idx}", use_container_width=True):

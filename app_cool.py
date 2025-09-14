@@ -39,7 +39,7 @@ def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
             continue
         # if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
         #     continue
-        if h.get("housing_type") not in user_preferences["housing_type"]:
+        if h.get("housing_type") not in user_preferences["housing_type"] or user_preferences["housing_type"] == []:
             continue
         # Match amenities from travel_info (desired_amenities)
         desired = set(travel_info.get("desired_amenities", []))
@@ -61,15 +61,15 @@ experience_agent = []
 
 @tool(show_result=True)
 def view_housing_option(housing_id : str) -> dict:
-    return housing_id_dict[housing_id]
+    return housing_id_dict.get(housing_id, "No housing exists with this ID")
 
 @tool(show_result=True)
 def view_cuisine_option(cuisine_id : str) -> dict:
-    return cuisine_id_dict[cuisine_id]
+    return cuisine_id_dict.get(cuisine_id, "No cuisine exists with this ID")
 
 @tool(show_result=True)
 def view_experience_option(experience_id : str) -> dict:
-    return experience_id_dict[experience_id]
+    return experience_id_dict.get(experience_id, "No experience exists with this ID")
 
 @tool(show_result=True)
 def add_housing_option(housing_option: str):

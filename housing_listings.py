@@ -47,7 +47,7 @@ for _ in range(NUM_ROWS):
     cost = int(round(cost / 5) * 5) # Round to nearest 5
 
     listing = {
-        "location": "Boston, USA",
+        "location": "Boston",
         "safety_rating": round(random.uniform(3.5, 5.0), 2),
         "neighborhood": random.choice(BOSTON_NEIGHBORHOODS),
         "housing_type": housing_type,

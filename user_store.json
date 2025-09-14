@@ -1,0 +1,30 @@
+{
+  "ab@gmail.com": {
+    "preferences": {},
+    "state": {},
+    "history": [
+      {
+        "likes": {
+          "housing": [
+            "H23",
+            "H10"
+          ],
+          "cuisine": [
+            "C3"
+          ],
+          "experience": []
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14"
+          ],
+          "desired_amenities": [],
+          "travelers": 1,
+          "cuisine_preferences": [],
+          "experience_preferences": []
+        }
+      }
+    ]
+  }
+}

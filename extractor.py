@@ -48,10 +48,24 @@ def extract_travel_info(paragraph):
         "experience_types": []
     }
 
-    # Extract location (GPE entities)
-    locations = [ent.text for ent in doc.ents if ent.label_ == "GPE"]
+    # Extract location (GPE entities) — prefer "City, Country" when available
+    locations = [ent.text.strip() for ent in doc.ents if ent.label_ == "GPE"]
     if locations:
-        info["location"] = locations[0]
+        # Heuristic: first GPE is city/region, last GPE is likely country
+        city = locations[0]
+        country = locations[-1]
+
+        # Normalize common country variants
+        def _norm_country(c: str) -> str:
+            c_lower = c.lower()
+            if c_lower in {"united states", "united states of america", "usa", "u.s.a.", "us", "u.s."}:
+                return "USA"
+            return c
+
+        if len(locations) > 1 and country and country != city:
+            info["location"] = f"{city}, {_norm_country(country)}"
+        else:
+            info["location"] = city
 
     # Extract dates (DATE entities)
     dates = [ent.text for ent in doc.ents if ent.label_ == "DATE"]
@@ -72,7 +86,7 @@ def extract_travel_info(paragraph):
     # Extract amenities, housing type, cuisine, experience, safety, price range
     amenities_keywords = ["wifi", "kitchen", "balcony", "pool", "air conditioning", "washing machine"]
     housing_keywords = ["house", "hotel", "apartment", "hostel"]
-    cuisine_keywords = ["italian", "japanese", "chinese", "mexican", "indian", "french"]
+    cuisine_keywords = ["italian", "japanese", "chinese", "mexican", "indian", "french", "american"]
     experience_keywords = ["adventure", "relaxation", "sightseeing", "culture", "nature"]
     safety_keywords = ["high", "medium", "low"]
     price_keywords = ["dollar", "usd", "$", "euro", "€"]
