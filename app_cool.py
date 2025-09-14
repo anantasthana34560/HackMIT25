@@ -4,97 +4,160 @@
 # 4. Presenting each option one by one and peope can swipe left or right 
 # 5. Agent that uses swipes to create a stay per day  
 
-from housing_listings import housing_listings
-from cuisine_listings import cuisine_listings
-from experience_listings import experience_listings
+from housing_listings import housing_listings, housing_id_dict
+from cuisine_listings import cuisine_listings, cuisine_id_dict
+from experience_listings import experience_listings, experience_id_dict
+from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from typing import List, Dict, Any
+import json
+import os
 
-# --- Housing Filter ---
-def filter_housing(user_preferences, travel_info):
-    options = []
-    for house in housing_listings:
-        if house["location"] != travel_info["location"]:
-            continue
-        if user_preferences.get("safety_level") and house["safety"] != user_preferences["safety_level"]:
-            continue
-        if house["housing_type"] not in user_preferences.get("housing_type", []):
-            continue
-        if not (user_preferences["price_range"][0] <= house["cost_per_night"] <= user_preferences["price_range"][1]):
-            continue
-        if not any(a in house["amenities"] for a in travel_info.get("desired_amenities", [])):
-            continue
-        if not all(date in house["scheduled_dates"] for date in travel_info.get("dates", [])):
-            continue
-        options.append(house)
-    return options
+# ===== Schema =====
+class ListOut(BaseModel):
+    housing_ids: List[str]
+    cuisine_ids: List[str]
+    experience_ids: List[str]
 
-# --- Cuisine Filter ---
-def filter_cuisine(user_preferences, travel_info):
-    options = []
-    for cuisine in cuisine_listings:
-        if cuisine["location"] != travel_info["location"]:
-            continue
-        if cuisine["cuisine_type"] not in travel_info.get("cuisine_preferences", []):
-            continue
-        options.append(cuisine)
-    return options
+# ===== Filters (fixed signatures & scoping) =====
+def filter_cuisine(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
+    location = travel_info["location"]
+    return [c for c in cuisine_listings if c.get("location") == location]
 
-# --- Experience Filter ---
-def filter_experiences(user_preferences, travel_info):
-    options = []
-    for exp in experience_listings:
-        if exp["location"] != travel_info["location"]:
-            continue
-        if exp["experience"] not in travel_info.get("experience_preferences", []):
-            continue
-        options.append(exp)
-    return options
+def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
+    location = travel_info["location"]
+    return [e for e in experience_listings if e.get("location") == location]
 
-# --- Agno Agent with Claude ---
+def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
+    location = travel_info["location"]
+    dates = travel_info.get("dates", [])
+    # require all requested dates to be in scheduled_dates
+    out = []
+    for h in housing_listings:
+        if h.get("location") != location:
+            continue
+        if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
+            continue
+        out.append(h)
+    return out
+
+# ===== Agno Agent (Claude) =====
 from agno.agent import Agent
 from agno.models.anthropic import Claude
-import os 
+from agno.tools import tool
 
-def ai_travel_agent_agno(user_message, user_preferences, travel_info):
-    housing_options = filter_housing(user_preferences, travel_info)
-    cuisine_options = filter_cuisine(user_preferences, travel_info)
-    experience_options = filter_experiences(user_preferences, travel_info)
 
-    context = f"""
-User Preferences: {user_preferences}\nTravel Info: {travel_info}\n\nHousing Options: {housing_options}\nCuisine Options: {cuisine_options}\nExperience Options: {experience_options}\n"""
+@tool(show_result=True)
+def view_housing_option(housing_id : str) -> dict:
+    return housing_id_dict[housing_id]
 
-    prompt = (
-        "You are a helpful travel agent AI. Use the provided options and preferences to make recommendations.\n"
-        f"{user_message}\n{context}"
-    )
+@tool(show_result=True)
+def add_housing_option(housing_option: str):
+    if housing_option in housing_id_dict:
+        return "Housing option already exists"
+    housing_listings.append(housing_option)
+    return housing_listings
+
+@tool(show_result=True)
+def add_cuisine_option(cuisine_option: str):
+    if cuisine_option in cuisine_id_dict:
+        return "Cuisine option already exists"
+    cuisine_listings.append(cuisine_option)
+    return cuisine_listings
+
+@tool(show_result=True)
+def add_experience_option(experience_option: str):
+    if experience_option in experience_id_dict:
+        return "Experience option already exists"
+    experience_listings.append(experience_option)
+    return experience_listings
+
+def build_context(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
+    housing_opts = filter_housing(user_preferences, travel_info)
+    cuisine_opts = filter_cuisine(user_preferences, travel_info)
+    experience_opts = filter_experiences(user_preferences, travel_info)
+
+    # Keep context compact (IDs + a few fields). The model only needs IDs to choose.
+    def slim(items, keep=("id", "name", "price", "tags")):
+        return [{k: v for k, v in item.items() if k in keep} for item in items]
+
+    ctx = {
+        "UserPreferences": user_preferences,
+        "TravelInfo": travel_info,
+        "HousingOptions": slim(housing_opts),
+        "CuisineOptions": slim(cuisine_opts),
+        "ExperienceOptions": slim(experience_opts),
+    }
+    return ctx, housing_opts, cuisine_opts, experience_opts
+
+def coerce_to_ListOut(text: str) -> ListOut:
+    """
+    Strictly parse JSON and validate with Pydantic. Raises on failure.
+    """
+    data = json.loads(text)
+    return ListOut.model_validate(data)
+
+def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]) -> ListOut:
+    context, housing_opts, cuisine_opts, experience_opts = build_context(user_preferences, travel_info)
+
+    # Create the prompt. Put hard schema rules up front.
+    SYSTEM_CONSTRAINTS = """
+Here are the preferences of the user: {user_preferences}
+Here are the travel information of the user: {travel_info}
+Here are the housing options: {housing_opts}
+Here are the cuisine options: {cuisine_opts}
+Here are the experience options: {experience_opts}
+
+You are an opportunities chooser model. You are not planning out the whole trip. Your job is to consider the possible housing, cuisine, and experience options avaialable, and if any of those look reasonably aligned with the user interests, track their ids. 
+
+YOU MUST return output as **JSON ONLY** conforming to this schema:
+{
+  "housing_ids": [],   // str IDs from Housing Options
+  "cuisine_ids": [],   // str IDs from Cuisine Options
+  "experience_ids": [] // str IDs from Experience Options
+}
+
+Rules:
+- Use only IDs that appear in the provided options (do not invent IDs).
+- Do not include any extra fields or text.
+- If a list is empty, return [] for that list.
+- Do not add comments or prose; return a single JSON object only.
+"""
 
     agent = Agent(model=Claude(id="claude-opus-4-1-20250805"))
-    agent.print_response(prompt)
+    # If Agno supports schema binding directly, keep this:
+    agent.output_schema = ListOut  # (Nice-to-have; we still validate below)
+    
+    agent.print_response(SYSTEM_CONSTRAINTS)
 
-# --- Example Usage ---
+    # --- Attempt 1
+    # raw = agent.run(prompt).content if hasattr(agent.run(prompt), "content") else agent.run(prompt)
+    # try:
+    #     out = coerce_to_ListOut(raw)
+    # except Exception as e:
+    #     # --- Attempt 2: repair by telling model the exact error and to re-output clean JSON
+    #     repair_prompt = f"""
+    #     The model output the following error: {e}
+    #     Please repair the output and return the correct JSON.
+    #     """
+    #     raw = agent.run(repair_prompt).content if hasattr(agent.run(repair_prompt), "content") else agent.run(repair_prompt)
+    #     try:
+    #         out = coerce_to_ListOut(raw)
+    #     except Exception as e:
+    #         raise ValueError(f"Failed to parse AI response: {e}")
+    # return out
+
 if __name__ == "__main__":
     from preferences import user_preferences
     from travel_info import travel_info
-    user_message = "Plan my trip!"
-    ai_travel_agent_agno(user_message, user_preferences, travel_info)
+    ai_travel_agent_agno(user_preferences, travel_info)
 
-
-def get_recommendations(city, start_date, end_date, user_profile):
-    # Filter by city and available dates
-    houses = House.query.filter_by(city=city)
-    houses = [h for h in houses if h.is_available(start_date, end_date)]
-    # Filter by safety
-    houses = [h for h in houses if h.safety_score > 7]
-    # Rank by amenities matching user_profile
-    houses = rank_by_amenities(houses, user_profile)
-    return houses
-
-
-def update_user_profile(user_profile, house, liked):
-    if liked:
-        for amenity in house.amenities:
-            user_profile['amenities'][amenity] += 1
-    else:
-        for amenity in house.amenities:
-            user_profile['amenities'][amenity] -= 1
-    # Save user_profile to DB
+# def update_user_profile(user_profile, house, liked):
+#     if liked:
+#         for amenity in house.amenities:
+#             user_profile['amenities'][amenity] += 1
+#     else:
+#         for amenity in house.amenities:
+#             user_profile['amenities'][amenity] -= 1
+#     # Save user_profile to DB
 
