@@ -589,8 +589,237 @@ st.markdown("""
         font-weight: bold !important;
         outline: none !important;
     }
+
+    <style>
+    /* --- Overall app background with blue-green gradient --- */
+    .stApp {
+        background: linear-gradient(135deg, #e3f2fd 0%, #b2f7ef 50%, #34ace0 100%);
+        color: #222;
+        min-height: 100vh;
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+
+    /* --- Card-style containers with a subtle blueish tint and nice shadow --- */
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 18px;
+        box-shadow: 0 7px 40px 0 rgba(52, 172, 224, 0.10);
+        padding: 2.2rem;
+        margin-top: 1.1rem;
+        border: 1px solid #b2f7ef33;
+    }
+
+    /* --- Button styling: blue-green gradient, bold, animated on hover --- */
+    .stButton > button, .stFormSubmitButton > button, button {
+        background: linear-gradient(90deg, #3ec6e0 0%, #3ee098 100%);
+        color: #fff !important;
+        font-weight: 700;
+        font-family: Arial, sans-serif !important;
+        border: none;
+        border-radius: 12px !important;
+        padding: 0.7rem 1.6rem !important;
+        font-size: 1.15rem !important;
+        box-shadow: 0 2px 18px 0 rgba(52, 172, 224, 0.08);
+        transition: 
+            background 0.35s cubic-bezier(.68,-0.55,.27,1.55),
+            transform 0.16s cubic-bezier(.68,-0.55,.27,1.55),
+            box-shadow 0.26s;
+        outline: none !important;
+    }
+    .stButton > button:hover, .stFormSubmitButton > button:hover, button:hover {
+        background: linear-gradient(90deg, #0093e9 0%, #00d977 100%) !important;
+        color: #fff !important;
+        transform: scale(1.07);
+        box-shadow: 0 8px 32px 0 rgba(0,190,249,0.18);
+        cursor: pointer;
+        border: none !important;
+    }
+    .stButton > button:focus, .stFormSubmitButton > button:focus {
+        background: linear-gradient(90deg, #0093e9 0%, #00d977 100%);
+        outline: 2px solid #47d7ac55 !important;
+    }
+
+    /* --- Tab and card design: blue-green gradiants, bold selected, fun contrast --- */
+    .stTabs [data-baseweb="tab-list"] {
+        background: none;
+        border-bottom: 3px solid #3ec6e0;
+        margin-bottom: 0.7rem;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-size: 1.15rem;
+        color: #34ace0;
+        font-weight: 600;
+        border-radius: 10px 10px 0 0;
+        background: linear-gradient(90deg, #e3f2fd 40%, #b2f7ef 100%);
+        padding: 0.9rem 1.9rem;
+        border: none;
+        margin: 0 6px;
+        transition: background 0.28s, color 0.28s;
+        box-shadow: 0 2px 12px 0 rgba(52,172,224,0.07);
+    }
+    .stTabs [data-baseweb="tab"]:hover, .stTabs [data-baseweb="tab"]:active {
+        background: linear-gradient(90deg, #3ec6e0 0%, #3ee098 100%);
+        color: #fff;
+    }
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(90deg, #0093e9 0%, #00d977 100%) !important;
+        color: #fff !important;
+        font-weight: 900 !important;
+        border-bottom: 3px solid #00d977 !important;
+        filter: drop-shadow(0 2px 8px #3ee09844);
+    }
+
+    /* --- Inputs and Selects: blue border focus --- */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select, .stDateInput input,
+    .stMultiSelect input {
+        border: 2px solid #3ec6e0 !important;
+        border-radius: 9px !important;
+        padding: 0.58rem 1.08rem !important;
+        color: #222 !important;
+        transition: border 0.2s;
+        background: white !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus, .stSelectbox select:focus,
+    .stDateInput input:focus, .stMultiSelect input:focus {
+        border-color: #0093e9 !important;
+        outline: none !important;
+        box-shadow: 0 0 5px #0093e955;
+    }
+
+    /* --- Metric and info boxes: blue borders --- */
+    .metric-container, .stAlert, .stSuccess, .stError {
+        border: 2px solid #3ee09855 !important;
+        background: rgba(178,247,239, 0.25) !important;
+        border-radius: 13px !important;
+    }
+
+    /* --- Headers, subheaders, text --- */
+    h1, h2, h3, h4, h5 {
+        color: #087be5 !important;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.45em;
+    }
+    .stMarkdown, .stText, p, span, div, label {
+        color: #123d4c !important;
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+
+    /* --- Misc: Make cards and expanders more modern --- */
+    .streamlit-expanderHeader {
+        background: #e3f2fd88 !important;
+        border-radius: 11px 11px 0 0 !important;
+        color: #087be5 !important;
+        font-weight: bold;
+    }
+    .streamlit-expanderContent {
+        background: #f2fffd !important;
+        border-radius: 0 0 11px 11px !important;
+    }
+    .stApp {
+    background: #e3f0ff !important; /* pastel blue, adjust as desired */
+    background-color: #e3f0ff !important;
+    min-height: 100vh;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+/* --- Remove Tab Highlight/Chip Bug --- */
+div[data-baseweb="tab-highlight"] {
+    background: transparent !important;
+    display: none !important;
+}
+.stTabs [data-baseweb="tab"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #fff !important;
+    color: #0093e9 !important;
+    border: 2px solid #57b0ff !important;
+    box-shadow: 0 4px 22px 0 rgba(0,147,233,0.07);
+}
+
+/* --- Optional: Disable all user text selection (if you want) --- */
+/*
+* {
+    user-select: none !important;
+}
+*/
+
+/* --- Make the app even cleaner and more readable --- */
+h1, h2, h3, h4, h5 {
+    color: #087be5 !important;
+    font-weight: 700;
+    margin-bottom: 0.45em;
+}
+.stMarkdown, .stText, p, span, div, label {
+    color: #123d4c !important;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+/* App-level background (whole page) */
+html, body, .stApp {
+    background: #e3f0ff !important; /* Light blue, change as desired */
+    background-color: #e3f0ff !important;
+    min-height: 100vh;
+}
+/* Force all containers and main blocks to have transparent background */
+[data-testid="stAppViewContainer"] {
+    background: transparent !important;
+}
+[class^="block-container"], .main .block-container, [data-testid="stVerticalBlock"], [data-testid="column"], .main {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+/* Wipe default backgrounds on forms and widgets */
+.stForm, .stTabs, .stDataFrame, .element-container, .metric-container, .stAlert, .stSuccess, .stError {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Remove tab highlight/selection chip look */
+div[data-baseweb="tab-highlight"] {
+    background: transparent !important;
+    display: none !important;
+}
+.stTabs [data-baseweb="tab"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #fff !important; /* if you want blue tabs: use #e3f0ff or #0093e9 */
+    color: #0093e9 !important;
+    border: 2px solid #57b0ff !important;
+    box-shadow: 0 4px 22px 0 rgba(0,147,233,0.07);
+}
+
+/* Optional: Make everything even cleaner and more readable */
+h1, h2, h3, h4, h5 {
+    color: #087be5 !important;
+    font-weight: 700;
+    margin-bottom: 0.45em;
+}
+.stMarkdown, .stText, p, span, div, label {
+    color: #123d4c !important;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+/* (Scoped centering moved to specific steps) */
 </style>
 """, unsafe_allow_html=True)
+
+# Scoped centering only for swipe and final itinerary sections
+st.markdown(
+    """
+    <style>
+    /* Center only containers and common elements within swipe/final sections */
+    #swipe-ui, #final-itinerary { text-align: center; margin: 0 auto; }
+    #swipe-ui h1, #swipe-ui h2, #swipe-ui h3, #swipe-ui h4, #swipe-ui h5,
+    #final-itinerary h1, #final-itinerary h2, #final-itinerary h3, #final-itinerary h4, #final-itinerary h5 { text-align: center; }
+    #swipe-ui .stButton > button, #final-itinerary .stButton > button { margin: 0.5rem auto !important; display: block; }
+    #swipe-ui .stImage img, #final-itinerary .stImage img { margin: 0.5rem auto !important; display: block; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # API Configuration (set to False to disable backend calls and use local fallbacks)
 USE_BACKEND = True
@@ -1049,7 +1278,7 @@ class TravelEaseApp:
                 ai_result = None
                 if USE_BACKEND:
                     ai_result = self.make_api_request("/ai-agent", {
-                        "query": f"I want to travel to {destination_input}. Suggest 12 specific destinations with details including name, description, best time to visit, and average temperature.",
+                                "query": f"I want to travel to {destination_input}. Suggest 12 specific destinations with details including name, description, best time to visit, and average temperature.",
                         "preferences": travel_preferences
                     })
 
@@ -1912,67 +2141,20 @@ class TravelEaseApp:
                 st.rerun()
 
         elif st.session_state.ai_step == 'swipe':
+            st.markdown('<div id="swipe-ui">', unsafe_allow_html=True)
             st.markdown("### Swipe your curated options")
             cats = [('housing', 'Stay', housing_id_dict), ('cuisine', 'Dining', cuisine_id_dict), ('experience', 'Experience', experience_id_dict)]
-            done_all = True
+
+            # Show one category at a time, in order: housing → cuisine → experience
+            current = None
             for key, label, mapping in cats:
                 ids = st.session_state.ai_candidates.get(f'{key}_ids', [])
                 idx = st.session_state.ai_idx.get(key, 0)
-                st.markdown(f"#### {label}")
                 if idx < len(ids):
-                    done_all = False
-                    _id = ids[idx]
-                    item = mapping.get(_id)
-                    if not item:
-                        st.warning(f"Missing {_id}")
-                        st.session_state.ai_idx[key] = idx + 1
-                        st.rerun()
-                    # Rich card display with real details instead of only the ID
-                    if key == 'housing':
-                        title = f"{item.get('housing_type','Stay')} · {item.get('neighborhood', item.get('location',''))}"
-                        amenities = item.get('amenities', [])
-                        if isinstance(amenities, str):
-                            amenities = [a.strip() for a in amenities.split(',') if a.strip()]
-                        amen_str = ", ".join(amenities[:6]) + (" …" if len(amenities) > 6 else "")
-                        safety = item.get('safety') or item.get('safety_rating')
-                        reviews = item.get('reviews', [])
-                        if isinstance(reviews, str):
-                            reviews = [r.strip() for r in reviews.split(';') if r.strip()]
-                        st.markdown(f"**{title}**")
-                        if safety:
-                            st.caption(f"Safety: {safety}")
-                        if amen_str:
-                            st.caption(f"Amenities: {amen_str}")
-                        if reviews:
-                            st.write(f"“{reviews[0]}”")
-                    elif key == 'cuisine':
-                        st.markdown(f"**{item.get('cuisine_type','Cuisine')}** · {item.get('location','')}")
-                        kind = item.get('pricing')
-                        if kind:
-                            st.caption(f"Style: {kind}")
-                    else:
-                        st.markdown(f"**{item.get('experience','Experience')}** · {item.get('location','')}")
-                        kw = item.get('keyword')
-                        if kw:
-                            st.caption(f"Category: {kw}")
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        if st.button(f"👎 Pass {label}", key=f"pass_{key}_{idx}", use_container_width=True):
-                            st.session_state.ai_idx[key] = idx + 1
-                            st.rerun()
-                    with c2:
-                        if st.button(f"❤️ Like {label}", key=f"like_{key}_{idx}", use_container_width=True):
-                            st.session_state.ai_like[key].append(_id)
-                            st.session_state.ai_idx[key] = idx + 1
-                            # If housing is selected, skip to final itinerary
-                            if key == 'housing':
-                                st.session_state.ai_step = 'final'
-                            st.rerun()
-                else:
-                    st.success(f"No more {label.lower()} to review.")
-                st.divider()
+                    current = (key, label, mapping, ids, idx)
+                    break
 
-            if done_all:
+            if current is None:
                 st.success("All categories reviewed!")
                 if st.button("✨ Generate Final Itinerary", use_container_width=True):
                     st.session_state.ai_final = self._generate_final_itinerary(
@@ -1982,8 +2164,60 @@ class TravelEaseApp:
                     )
                     st.session_state.ai_step = 'final'
                     st.rerun()
+            else:
+                key, label, mapping, ids, idx = current
+                st.markdown(f"#### {label}")
+                _id = ids[idx]
+                item = mapping.get(_id)
+                if not item:
+                    st.warning(f"Missing {_id}")
+                    st.session_state.ai_idx[key] = idx + 1
+                    st.rerun()
+
+                # Display rich card with details
+                if key == 'housing':
+                    title = f"{item.get('housing_type','Stay')} · {item.get('neighborhood', item.get('location',''))}"
+                    amenities = item.get('amenities', [])
+                    if isinstance(amenities, str):
+                        amenities = [a.strip() for a in amenities.split(',') if a.strip()]
+                    amen_str = ", ".join(amenities[:6]) + (" …" if len(amenities) > 6 else "")
+                    safety = item.get('safety') or item.get('safety_rating')
+                    reviews = item.get('reviews', [])
+                    if isinstance(reviews, str):
+                        reviews = [r.strip() for r in reviews.split(';') if r.strip()]
+                    st.markdown(f"**{title}**")
+                    if safety:
+                        st.caption(f"Safety: {safety}")
+                    if amen_str:
+                        st.caption(f"Amenities: {amen_str}")
+                    if reviews:
+                        st.write(f"“{reviews[0]}”")
+                elif key == 'cuisine':
+                    display_name = item.get('name') or item.get('cuisine_type','Cuisine')
+                    st.markdown(f"**{display_name}** · {item.get('location','')}")
+                    kind = item.get('pricing')
+                    if kind:
+                        st.caption(f"Style: {kind}")
+                else:
+                    st.markdown(f"**{item.get('experience','Experience')}** · {item.get('location','')}")
+                    kw = item.get('keyword')
+                    if kw:
+                        st.caption(f"Category: {kw}")
+
+                st.caption(f"{idx + 1} of {len(ids)}")
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button(f"👎 Pass {label}", key=f"pass_{key}_{idx}", use_container_width=True):
+                        st.session_state.ai_idx[key] = idx + 1
+                        st.rerun()
+                with c2:
+                    if st.button(f"❤️ Like {label}", key=f"like_{key}_{idx}", use_container_width=True):
+                        st.session_state.ai_like[key].append(_id)
+                        st.session_state.ai_idx[key] = idx + 1
+                        st.rerun()
 
         elif st.session_state.ai_step == 'final':
+            st.markdown('<div id="final-itinerary">', unsafe_allow_html=True)
             st.markdown("## 🎉 Your AI-Crafted Itinerary")
             likes = st.session_state.ai_like
             travel_info = st.session_state.ai_travel_info
@@ -2003,7 +2237,8 @@ class TravelEaseApp:
                 with cols[i % 3]:
                     c = cuisine_id_dict.get(_id)
                     if c:
-                        st.markdown(f"**{c.get('cuisine_type','Cuisine')}** · {c.get('location','')}")
+                        display_name = c.get('name') or c.get('cuisine_type','Cuisine')
+                        st.markdown(f"**{display_name}** · {c.get('location','')}")
             st.markdown("### 🎯 Experiences")
             cols = st.columns(3)
             for i, _id in enumerate(likes.get('experience', [])[:6]):
@@ -2024,6 +2259,19 @@ class TravelEaseApp:
                 st.subheader("Events & Festivals")
                 for ev in enrich.get('events', []):
                     st.write(f"- {ev}")
+
+                # --- Social media mock buttons ---
+                st.markdown("### 📣 Share Your Trip")
+                sc1, sc2, sc3 = st.columns(3)
+                with sc1:
+                    if st.button("📸 Post to Instagram", key="share_insta", use_container_width=True):
+                        st.success("Mock: Posted highlights to Instagram!")
+                with sc2:
+                    if st.button("🟡 Post to BeReal", key="share_bereal", use_container_width=True):
+                        st.success("Mock: Posted your BeReal with itinerary snippet!")
+                with sc3:
+                    if st.button("🔗 Share with Friends", key="share_friends", use_container_width=True):
+                        st.success("Mock: Share link copied to clipboard!")
 
             if st.button("🔁 Start New Plan", use_container_width=True):
                 st.session_state.ai_step = 'input'

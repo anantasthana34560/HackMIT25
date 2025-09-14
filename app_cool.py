@@ -228,9 +228,13 @@ def second_stage_agent(username: str, likes: Dict[str, List[str]], travel_info: 
     history.append({'likes': likes, 'travel_info': travel_info})
     update_user(username, {'history': history})
 
+    # Strict schema and few-shot to reduce non-JSON responses
     system = (
-        "Create a concise day-by-day itinerary outline from liked items, then propose a packing list tailored to location and dates, "
-        "and list 3-5 relevant events or festivals. Keep JSON only with keys: itinerary, packing_list, events."
+        "You are a helpful travel assistant.\n"
+        "Return STRICT JSON ONLY (no prose) with keys: itinerary (array), packing_list (array of strings), events (array of strings).\n"
+        "Each itinerary item should have: day (string), housing_id (string|null), cuisine_id (string|null), experience_id (string|null).\n"
+        "Do not include markdown. Do not include explanations. JSON only."
+        "Remember: personalize the packing list to the user and the trip. Try to avoid generic items, like toiletry. For instance, if the user is going to India, reminnd them to pack sunscreen and bug spray, because India is sunny and has many mosquitoes."
     )
     user = {
         'likes': likes,
@@ -239,13 +243,45 @@ def second_stage_agent(username: str, likes: Dict[str, List[str]], travel_info: 
     }
 
     agent = Agent(model=Claude(id="claude-opus-4-1-20250805"), tools=[get_weather, search_events])
+
+    # First attempt
     raw = agent.run(json.dumps(user), system=system)
     text = raw.content if hasattr(raw, 'content') else str(raw)
-    # Best effort JSON load
     try:
         return json.loads(text)
-    except Exception:
-        return {'itinerary': [], 'packing_list': [], 'events': []}
+    except Exception as e:
+        # Second attempt: repair to strict JSON
+        repair = {
+            'error': f'Non-JSON or wrong schema: {str(e)}',
+            'schema': {
+                'itinerary': [{'day': 'YYYY-MM-DD', 'housing_id': 'H# or null', 'cuisine_id': 'C# or null', 'experience_id': 'E# or null'}],
+                'packing_list': ['string', 'string'],
+                'events': ['string', 'string']
+            },
+            'instruction': 'Re-output the last answer as STRICT JSON that matches the schema exactly, with no extra keys or commentary.'
+        }
+        raw2 = agent.run(json.dumps(repair), system=system)
+        text2 = raw2.content if hasattr(raw2, 'content') else str(raw2)
+        try:
+            return json.loads(text2)
+        except Exception:
+            # Final fallback: minimal sensible defaults so UI shows content
+            days = travel_info.get('dates', []) or ['Day 1', 'Day 2', 'Day 3']
+            fallback_itinerary = []
+            for i, d in enumerate(days):
+                fallback_itinerary.append({
+                    'day': d,
+                    'housing_id': (likes.get('housing') or [None])[0],
+                    'cuisine_id': (likes.get('cuisine') or [None])[i % max(1, len(likes.get('cuisine', [])))],
+                    'experience_id': (likes.get('experience') or [None])[i % max(1, len(likes.get('experience', [])))]
+                })
+            fallback_packing = [
+                'Passport/ID', 'Phone + charger', 'Medications', 'Water bottle',
+                'Layers for variable weather', 'Comfortable walking shoes',
+            ]
+            city = travel_info.get('location', '')
+            fallback_events = [f'Check city calendar for events in {city}', 'Local museum late nights', 'Weekend markets']
+            return {'itinerary': fallback_itinerary, 'packing_list': fallback_packing, 'events': fallback_events}
 
 if __name__ == "__main__":
     from preferences import user_preferences

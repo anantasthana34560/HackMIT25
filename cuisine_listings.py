@@ -50,6 +50,8 @@ def _load_cuisines_from_csv():
         reader = csv.DictReader(f)
         idx = 1
         for row in reader:
+            # Restaurant name: first column is unnamed in provided CSV
+            name = (row.get('') or row.get('Name') or row.get('Restaurant') or '').strip()
             cuisine_type = row.get('Cuisine Type', '').strip() or 'Unknown'
             min_price = row.get('Min Price ($)', '')
             max_price = row.get('Max Price ($)', '')
@@ -57,6 +59,7 @@ def _load_cuisines_from_csv():
             results.append({
                 'id': f"C{idx}",
                 'location': _normalize_location(),
+                'name': name or cuisine_type,
                 'cuisine_type': cuisine_type,
                 'pricing': pricing,
             })

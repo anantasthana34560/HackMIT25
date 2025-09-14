@@ -24,6 +24,220 @@
           "cuisine_preferences": [],
           "experience_preferences": []
         }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H9",
+            "H5",
+            "H21"
+          ],
+          "cuisine": [
+            "C23",
+            "C34",
+            "C61",
+            "C11",
+            "C72"
+          ],
+          "experience": [
+            "E5",
+            "E10",
+            "E9",
+            "E6"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-15"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": []
+        }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H9",
+            "H1",
+            "H19"
+          ],
+          "cuisine": [
+            "C72",
+            "C11",
+            "C23",
+            "C61"
+          ],
+          "experience": [
+            "E5",
+            "E1",
+            "E10",
+            "E9"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-15"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": []
+        }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H4",
+            "H1",
+            "H18",
+            "H20",
+            "H7"
+          ],
+          "cuisine": [
+            "C11",
+            "C34",
+            "C23",
+            "C61",
+            "C71"
+          ],
+          "experience": [
+            "E9",
+            "E1",
+            "E4",
+            "E3",
+            "E6"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-15"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": []
+        }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H2",
+            "H9",
+            "H14",
+            "H8",
+            "H26"
+          ],
+          "cuisine": [
+            "C23",
+            "C61"
+          ],
+          "experience": [
+            "E12",
+            "E3",
+            "E10",
+            "E1"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-15"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": [
+            "Sightseeing"
+          ]
+        }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H2",
+            "H9",
+            "H14",
+            "H8",
+            "H26"
+          ],
+          "cuisine": [
+            "C23",
+            "C61"
+          ],
+          "experience": [
+            "E12",
+            "E3",
+            "E10",
+            "E1"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-15"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": [
+            "Sightseeing"
+          ]
+        }
+      },
+      {
+        "likes": {
+          "housing": [
+            "H2",
+            "H9",
+            "H8"
+          ],
+          "cuisine": [
+            "C61",
+            "C1",
+            "C34"
+          ],
+          "experience": [
+            "E12",
+            "E3",
+            "E10",
+            "E1"
+          ]
+        },
+        "travel_info": {
+          "location": "Boston, USA",
+          "dates": [
+            "2025-09-14",
+            "2025-09-18"
+          ],
+          "desired_amenities": [],
+          "travelers": 2,
+          "cuisine_preferences": [
+            "Italian"
+          ],
+          "experience_preferences": [
+            "Sightseeing"
+          ]
+        }
       }
     ]
   }
