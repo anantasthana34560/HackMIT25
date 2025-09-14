@@ -10,11 +10,581 @@ import requests
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Co-Z - Find your home away from home on your next vacation.", #Your AI Travel Companion",
-    page_icon="✈️",
+    page_title="Co-Z - Your AI-Powered Travel Companion",
+    page_icon="🏠",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Custom CSS for light mode
+st.markdown("""
+<style>
+    /* Light mode theme */
+    .stApp {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+        color: #212529;
+    }
+    
+    /* Main content styling */
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-top: 1rem;
+    }
+    
+    /* Buttons - Neutral design (no blue highlight) */
+    .stButton > button {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border: 1.5px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+        transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease !important;
+    }
+    
+    .stButton > button:hover {
+        background: #f8f9fa !important;
+        border-color: #ced4da !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+        transform: translateY(-1px) !important;
+        color: #212529 !important;
+    }
+    
+    /* Form submit buttons */
+    .stFormSubmitButton > button {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border: 1.5px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+        transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease !important;
+    }
+    
+    .stFormSubmitButton > button:hover {
+        background: #f8f9fa !important;
+        border-color: #ced4da !important;
+        color: #212529 !important;
+    }
+    
+    /* Base buttons reset */
+    button {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 6px !important;
+    }
+    
+    button:hover {
+        background: #f8f9fa !important;
+        color: #212529 !important;
+        border-color: #ced4da !important;
+    }
+
+    /* Focus and active states (neutral) */
+    .stButton > button:focus, .stFormSubmitButton > button:focus, button:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.08) !important;
+        border-color: #adb5bd !important;
+    }
+    .stButton > button:active, .stFormSubmitButton > button:active, button:active {
+        background: #e9ecef !important;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.08) !important;
+        transform: translateY(0) !important;
+    }
+    
+    /* Form inputs - More specific targeting */
+    .stTextInput > div > div > input {
+        background: white !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+        color: #495057 !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #007bff !important;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.2) !important;
+        background: white !important;
+    }
+    
+    .stSelectbox > div > div > div {
+        background: white !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+        color: #495057 !important;
+    }
+    
+    .stTextArea > div > div > textarea {
+        background: white !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+        color: #495057 !important;
+    }
+    
+    /* Fix input containers */
+    .stTextInput > div {
+        background: transparent !important;
+    }
+    
+    .stSelectbox > div {
+        background: transparent !important;
+    }
+    
+    .stTextArea > div {
+        background: transparent !important;
+    }
+    
+    /* Fix input wrappers */
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
+        background: white !important;
+        color: #495057 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    textarea {
+        background: white !important;
+        color: #495057 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    select {
+        background: white !important;
+        color: #495057 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background: transparent;
+        border-bottom: 2px solid #e9ecef;
+        padding: 0;
+        border-radius: 0;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent !important;
+        color: #6c757d;
+        font-weight: 400;
+        border: none;
+        padding: 1rem 1.5rem;
+        border-radius: 0;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: transparent !important;
+        color: #495057;
+        border-bottom: 3px solid #dee2e6;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: transparent !important;
+        color: #212529 !important;
+        border-bottom: 3px solid #495057 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Success and error messages */
+    .stSuccess {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .stError {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    /* Headers and text */
+    h1, h2, h3 {
+        color: #212529;
+    }
+    
+    /* Fix all text colors */
+    .stMarkdown, .stText, p, span, div {
+        color: #212529 !important;
+    }
+    
+    /* Fix metric boxes */
+    .metric-container {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix info boxes */
+    .stAlert {
+        background: white !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Fix expander */
+    .streamlit-expanderHeader {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    .streamlit-expanderContent {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix columns and containers */
+    .element-container {
+        background: transparent !important;
+    }
+    
+    /* Fix any remaining dark elements */
+    [data-testid="stVerticalBlock"] {
+        background: transparent !important;
+    }
+    
+    [data-testid="column"] {
+        background: transparent !important;
+    }
+    
+    /* Fix form containers */
+    .stForm {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    
+    /* Fix radio buttons */
+    .stRadio > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix checkboxes */
+    .stCheckbox > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix date input */
+    .stDateInput > div > div > input {
+        background: white !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Fix date input calendar popup */
+    .stDateInput [data-baseweb="calendar"] {
+        background: white !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .stDateInput [data-baseweb="calendar"] * {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix calendar header */
+    .stDateInput [data-baseweb="calendar-header"] {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix calendar days */
+    .stDateInput [data-baseweb="day"] {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    .stDateInput [data-baseweb="day"]:hover {
+        background: #f8f9fa !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix selected date */
+    .stDateInput [data-baseweb="day"][aria-selected="true"] {
+        background: #007bff !important;
+        color: white !important;
+    }
+    
+    /* Fix date input container */
+    .stDateInput > div {
+        background: transparent !important;
+    }
+    
+    /* Fix any remaining calendar elements */
+    [data-testid="stDateInput"] {
+        background: white !important;
+    }
+    
+    [data-testid="stDateInput"] * {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix multiselect and selectbox dropdown styling */
+    .stMultiSelect > div > div {
+        background: white !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    .stMultiSelect > div > div > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    .stMultiSelect [data-baseweb="select"] {
+        background: white !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+    }
+    
+    .stMultiSelect [data-baseweb="select"] > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix selectbox dropdown */
+    .stSelectbox > div {
+        background: white !important;
+    }
+    
+    .stSelectbox > div > div {
+        background: white !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] {
+        background: white !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+        border-radius: 8px !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] input {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix dropdown menus */
+    [data-baseweb="popover"] {
+        background: white !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    
+    [data-baseweb="menu"] {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    [data-baseweb="menu-item"] {
+        background: white !important;
+        color: #212529 !important;
+        padding: 8px 12px !important;
+    }
+    
+    [data-baseweb="menu-item"]:hover {
+        background: #f8f9fa !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix specific dropdown text visibility */
+    .stSelectbox div[data-testid="stSelectbox"] > div > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    .stSelectbox div[data-testid="stSelectbox"] > div > div > div {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Fix tags in multiselect */
+    .stMultiSelect [data-baseweb="tag"] {
+        background: #007bff !important;
+        color: white !important;
+    }
+    
+    /* Fix labels and help text */
+    .stMultiSelect label, .stSelectbox label {
+        color: #212529 !important;
+    }
+    
+    /* Fix any remaining dark containers */
+    [data-testid="stForm"] {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 10px !important;
+        padding: 1rem !important;
+    }
+    
+    /* Fix slider styling */
+    .stSlider > div > div > div {
+        background: white !important;
+    }
+    
+    .stSlider [data-baseweb="slider"] {
+        background: white !important;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    /* --- Dropdown (selectbox, multiselect) menu and options visibility fix --- */
+    .stSelectbox [data-baseweb="select"],
+    .stSelectbox [data-baseweb="select"] > div,
+    .stSelectbox [data-baseweb="select"] input,
+    .stSelectbox [data-baseweb="menu"],
+    .stSelectbox [data-baseweb="menu-item"],
+    .stMultiSelect [data-baseweb="select"],
+    .stMultiSelect [data-baseweb="select"] > div,
+    .stMultiSelect [data-baseweb="select"] input,
+    .stMultiSelect [data-baseweb="menu"],
+    .stMultiSelect [data-baseweb="menu-item"] {
+        background: #fff !important;
+        color: #212529 !important;
+        border: 2px solid #e9ecef !important;
+    }
+
+    .stSelectbox [data-baseweb="menu-item"]:hover,
+    .stMultiSelect [data-baseweb="menu-item"]:hover {
+        background: #e3f2fd !important;
+        color: #212529 !important;
+    }
+
+    [data-baseweb="popover"] {
+        background: #fff !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    [data-baseweb="menu"] {
+        background: #fff !important;
+        color: #212529 !important;
+    }
+    [data-baseweb="menu-item"] {
+        background: #fff !important;
+        color: #212529 !important;
+        padding: 8px 12px !important;
+    }
+    [data-baseweb="menu-item"]:hover {
+        background: #e3f2fd !important;
+        color: #212529 !important;
+    }
+
+    /* Nuclear option - force all elements to be visible */
+    * {
+        color: #212529 !important;
+    }
+    
+    div, span, p, input, select, option {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Streamlit specific overrides */
+    .stSelectbox *, .stMultiSelect *, .stDateInput * {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    /* Force dropdown visibility */
+    [class*="select"], [class*="Select"], [class*="dropdown"] {
+        background: white !important;
+        color: #212529 !important;
+    }
+    
+    [class*="select"] *, [class*="Select"] *, [class*="dropdown"] * {
+        background: white !important;
+        color: #212529 !important;
+    }
+            
+            /* ...existing CSS... */
+
+    /* --- Calendar (date input) improvements --- */
+    .stDateInput [data-baseweb="calendar"] {
+        background: #fff !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    .stDateInput [data-baseweb="calendar"] * {
+        background: #fff !important;
+        color: #212529 !important;
+    }
+
+    /* Remove black/gray slots for days outside current month */
+    .stDateInput [data-baseweb="day"][aria-disabled="true"] {
+        background: #f8f9fa !important;
+        color: #adb5bd !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Change selected date circle to a more engaging color */
+    .stDateInput [data-baseweb="day"][aria-selected="true"] {
+        background: #ff9800 !important;   /* Orange, eye-catching */
+        color: #fff !important;
+        border-radius: 50% !important;
+        box-shadow: 0 0 0 2px #ff980033 !important;
+        font-weight: bold !important;
+        outline: none !important;
+    }
+            
+                /* --- Calendar (date input) improvements --- */
+    .stDateInput [data-baseweb="calendar"] {
+        background: #fff !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    .stDateInput [data-baseweb="calendar"] * {
+        background: #fff !important;
+        color: #212529 !important;
+    }
+
+    /* Remove black/gray slots for days outside current month */
+    .stDateInput [data-baseweb="day"][aria-disabled="true"] {
+        background: #f8f9fa !important;
+        color: #adb5bd !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Change selected date circle to a more engaging color */
+    .stDateInput [data-baseweb="day"][aria-selected="true"] {
+        background: #ff9800 !important;   /* Orange, eye-catching */
+        color: #fff !important;
+        border-radius: 50% !important;
+        box-shadow: 0 0 0 2px #ff980033 !important;
+        font-weight: bold !important;
+        outline: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # API Configuration
 API_BASE_URL = "http://localhost:5000/api"
@@ -77,12 +647,18 @@ class TravelEaseApp:
 
     def render_landing_page(self):
         """Render the landing page with user registration"""
+        # Logo and branding header
         st.markdown("""
-        <div style='text-align: center; padding: 2rem 0;'>
-            <h1 style='color: #1E88E5; font-size: 3.5rem; margin-bottom: 1rem;'>🌍 Co-Z </h1>
+        <div style='text-align: center; padding: 3rem 0 2rem 0;'>
+            <div style='margin-bottom: 2rem;'>
+                <div style='display: inline-block; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                    <div style='font-size: 4rem; color: #E67E22; margin-bottom: 10px;'>🏠</div>
+                </div>
+            </div>
+            <h1 style='color: #E67E22; font-size: 3.5rem; margin-bottom: 1rem; font-weight: 700;'>Co-Z</h1>
             <h2 style='color: #424242; font-weight: 300; margin-bottom: 2rem;'>Your AI-Powered Travel Companion</h2>
             <p style='font-size: 1.2rem; color: #666; max-width: 600px; margin: 0 auto;'>
-                Plan your accomodation and everything from flights to restaurants and experiences - all in one place!
+                Plan your accommodation and everything from flights to restaurants and experiences - all in one place!
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -332,115 +908,77 @@ class TravelEaseApp:
                 st.rerun()
 
     def render_step1_travel_wishes(self):
-        """Step 1: Travel wishes and plans"""
-        st.markdown("## 🎯 Step 1: Tell Us About Your Dream Trip")
-        st.markdown("Share your travel wishes and we'll help make them come true!")
+        """Step 1: Adventure destination chat interface"""
+        # Header with logo and travel theme
+        st.markdown("""
+        <div style='text-align: center; padding: 2rem 0;'>
+            <div style='margin-bottom: 1.5rem;'>
+                <div style='display: inline-block; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
+                    <div style='font-size: 3rem; color: #E67E22;'>🏠</div>
+                </div>
+            </div>
+            <h1 style='color: #007bff; font-size: 2.5rem; margin-bottom: 1rem;'>
+                🌟 Hello! Where would you like your next adventure to take place?
+            </h1>
+            <p style='font-size: 1.2rem; color: #6c757d; margin-bottom: 2rem;'>
+                Tell us about your dream destination in your own words - be as detailed or as brief as you'd like!
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with st.form("travel_wishes"):
+        with st.form("adventure_destination"):
+            # Main text area for user input
+            destination_description = st.text_area(
+                "",
+                placeholder="Describe your ideal travel destination... Where do you want to go? What kind of experience are you looking for?",
+                height=150,
+                help="Share your travel dreams, preferences, and any specific requirements you have in mind."
+            )
+            
+            # Ideas section below the text area
+            st.markdown("""
+            <div style='background: rgba(0, 123, 255, 0.05); padding: 1rem; border-radius: 10px; margin: 1rem 0;'>
+                <h4 style='color: #007bff; margin-bottom: 0.5rem;'>💡 Ideas to get you started:</h4>
+                <p style='color: #6c757d; margin: 0; line-height: 1.6;'>
+                    <strong>Location:</strong> specific cities, countries, regions, or "surprise me!"<br>
+                    <strong>Cuisine:</strong> local food experiences, cooking classes, food tours<br>
+                    <strong>Pet-friendly:</strong> traveling with furry companions<br>
+                    <strong>Urban vs Rural:</strong> bustling cities or peaceful countryside<br>
+                    <strong>Transportation:</strong> access to public transit, walkable areas<br>
+                    <strong>Activities:</strong> beaches, mountains, museums, nightlife, adventure sports<br>
+                    <strong>Accommodation:</strong> hotels, vacation rentals, unique stays<br>
+                    <strong>Budget:</strong> luxury, mid-range, or budget-friendly options<br>
+                    <strong>Travel style:</strong> relaxing, adventurous, cultural, romantic
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Additional quick options
             col1, col2 = st.columns(2)
-
+            
             with col1:
-                st.markdown("**Trip Details**")
-                destination_input = st.text_input(
-                    "Where would you like to go? (City, Country, or 'Surprise me!')",
-                    placeholder="e.g., Paris, France or Southeast Asia"
-                )
-
                 trip_duration = st.selectbox("How long is your trip?", [
                     "Weekend (2-3 days)", "Short trip (4-7 days)",
                     "Week-long (8-14 days)", "Extended (2-4 weeks)", "Month or longer"
                 ])
-
+                
+            with col2:
                 travel_dates = st.date_input(
-                    "Preferred travel dates",
-                    value=[date.today(), date.today()],
-                    help="Select start and end dates, or approximate timeframe"
+                    "Preferred travel dates (optional)",
+                    value=None,
+                    help="Leave blank if you're flexible with dates"
                 )
 
-                flexibility = st.selectbox("How flexible are your dates?", [
-                    "Exact dates only", "Within a week", "Within a month",
-                    "Flexible - best prices", "Seasonal preference"
-                ])
-
-            with col2:
-                st.markdown("**Travel Companions**")
-                travel_group = st.selectbox("Who's traveling with you?", [
-                    "Just me (solo)", "Me + 1 person", "Small group (3-4 people)",
-                    "Large group (5+ people)", "Family with children", "Business trip"
-                ])
-
-                if travel_group != "Just me (solo)":
-                    group_details = st.text_area(
-                        "Tell us about your travel companions",
-                        placeholder="Ages, relationships, special needs, etc."
-                    )
-                else:
-                    group_details = ""
-
-                budget_total = st.selectbox("Total budget for this trip", [
-                    "Under $1,000", "$1,000 - $3,000", "$3,000 - $5,000",
-                    "$5,000 - $10,000", "$10,000 - $20,000", "$20,000+", "No budget limit"
-                ])
-
-            st.markdown("**Trip Preferences**")
-            col3, col4 = st.columns(2)
-
-            with col3:
-                trip_style = st.multiselect("What kind of vacation do you want?", [
-                    "Relaxing/Peaceful", "Adventure/Active", "Cultural immersion",
-                    "Party/Nightlife", "Romantic getaway", "Family fun",
-                    "Business + leisure", "Wellness/Spa", "Food & wine focused"
-                ])
-
-                must_have_activities = st.multiselect("Must-have activities", [
-                    "Beach time", "Mountain hiking", "City exploration", "Museums/Art",
-                    "Local cuisine", "Shopping", "Nightlife", "Photography",
-                    "Water sports", "Cultural sites", "Nature/Wildlife", "Adventure sports"
-                ])
-
-            with col4:
-                accommodation_preference = st.selectbox("Accommodation preference for this trip", [
-                    "Budget-friendly", "Mid-range comfort", "Luxury experience",
-                    "Unique/Local experience", "Family-friendly", "Romantic setting"
-                ])
-
-                accommodation_type_trip = st.multiselect("Preferred accommodation types for this trip", [
-                    "Hotels", "Entire house", "Apartment", "Condo/Townhouse",
-                    "Private room", "Shared room", "Hostels", "Resorts",
-                    "Boutique hotels", "Bed & Breakfast", "Villa", "Cabin/Cottage",
-                    "Camping", "Luxury accommodations", "Unique stays (treehouse, boat, etc.)"
-                ])
-
-                special_occasions = st.multiselect("Any special occasions?", [
-                    "None", "Birthday", "Anniversary", "Honeymoon", "Graduation",
-                    "Retirement", "Holiday celebration", "Business milestone"
-                ])
-
-            additional_wishes = st.text_area(
-                "Any other experiences, wishes, or requirements?",
-                placeholder="Tell us anything else that would make this trip perfect for you..."
-            )
-
-            submitted = st.form_submit_button("Continue to Destination Selection", use_container_width=True)
+            submitted = st.form_submit_button("✈️ Let's Plan My Adventure!", use_container_width=True)
 
             if submitted:
-                if not destination_input:
-                    st.error("Please tell us where you'd like to go!")
+                if not destination_description.strip():
+                    st.error("Please tell us about your dream destination!")
                 else:
                     st.session_state.travel_plans = {
-                        'destination_input': destination_input,
+                        'destination_description': destination_description,
                         'trip_duration': trip_duration,
-                        'travel_dates': travel_dates,
-                        'flexibility': flexibility,
-                        'travel_group': travel_group,
-                        'group_details': group_details,
-                        'budget_total': budget_total,
-                        'trip_style': trip_style,
-                        'must_have_activities': must_have_activities,
-                        'accommodation_preference': accommodation_preference,
-                        'accommodation_type_trip': accommodation_type_trip,
-                        'special_occasions': special_occasions,
-                        'additional_wishes': additional_wishes
+                        'travel_dates': travel_dates if travel_dates else None
                     }
 
                     st.session_state.current_step = 'step2'
