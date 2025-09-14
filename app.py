@@ -1,12 +1,12 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from dotenv import load_dotenv
 from openai import OpenAI
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from extractor import extract_travel_info
-from app_cool import ai_travel_agent_agno
+from app_cool import ai_travel_agent_agno, second_stage_agent
 from housing_listings import housing_id_dict
 from cuisine_listings import cuisine_id_dict
 from experience_listings import experience_id_dict
@@ -21,6 +21,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trips.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'supersecret'
 db = SQLAlchemy(app)
+try:
+    from flask_cors import CORS
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+except Exception:
+    pass
 
 # --- Flask-Login setup ---
 login_manager = LoginManager()
@@ -92,6 +97,69 @@ def logout():
 @login_required
 def home():
     return render_template("home.html", user=current_user)
+
+# ===== JSON API for Next.js frontend =====
+@app.route("/api/health", methods=["GET"])
+def api_health():
+    return jsonify({"ok": True}), 200
+
+@app.route("/api/ai-plan", methods=["POST"])
+def api_ai_plan():
+    try:
+        payload = request.get_json(force=True, silent=True) or {}
+        freeform_text = payload.get("freeform_text", "")
+        input_dates = payload.get("dates", [])
+        travelers = payload.get("travelers")
+        user_prefs = payload.get("user_preferences")
+        travel_info = payload.get("travel_info")
+
+        if not (user_prefs and travel_info):
+            extracted = extract_travel_info(freeform_text or "")
+            if input_dates:
+                extracted["dates"] = input_dates
+            if travelers:
+                extracted["travelers"] = travelers
+            user_prefs = {
+                "housing_type": extracted.get("housing_type", []) or ["House", "Apartment", "Hotel"],
+                "preferred_amenities": extracted.get("desired_amenities", []),
+                "safety_level": extracted.get("safety_level") or "High",
+                "price_range": extracted.get("price_range", [50, 150]),
+                "cuisine_types": extracted.get("cuisine_preferences", []),
+                "experience_types": extracted.get("experience_preferences", []),
+            }
+            travel_info = {
+                "location": extracted.get("location") or payload.get("location") or "Boston, USA",
+                "dates": extracted.get("dates", []),
+                "desired_amenities": extracted.get("desired_amenities", []),
+                "total_budget": extracted.get("total_budget", 0),
+                "travelers": extracted.get("travelers", 1),
+                "cuisine_preferences": extracted.get("cuisine_preferences", []),
+                "experience_preferences": extracted.get("experience_preferences", []),
+            }
+
+        recs = ai_travel_agent_agno(user_prefs, travel_info)
+        return jsonify({
+            "success": True,
+            "housing_ids": recs.housing_ids,
+            "cuisine_ids": recs.cuisine_ids,
+            "experience_ids": recs.experience_ids,
+            "user_preferences": user_prefs,
+            "travel_info": travel_info,
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/itinerary", methods=["POST"])
+def api_itinerary():
+    try:
+        payload = request.get_json(force=True, silent=True) or {}
+        username = payload.get("username") or "guest"
+        likes = payload.get("likes") or {"housing": [], "cuisine": [], "experience": []}
+        travel_info = payload.get("travel_info") or {}
+        data = second_stage_agent(username, likes, travel_info)
+        return jsonify({"success": True, **data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # --- New: start flow from freeform prompt + dates + travelers ---
 @app.route("/start", methods=["POST"]) 
