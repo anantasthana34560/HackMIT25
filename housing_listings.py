@@ -1,5 +1,6 @@
 housing_listings = [
     {
+        "id" : 1,
         "location": "Boston, USA",
         "safety": "High",
         "housing_type": "Hotel",
@@ -10,6 +11,7 @@ housing_listings = [
         "reviews": ["Great place to stay", "Bad place to stay", "Average place to stay"],
     },
     {
+        "id" : 2,
         "location": "Boston, USA",
         "safety": "Medium",
         "housing_type": "2-bedroom House",
@@ -20,6 +22,7 @@ housing_listings = [
         "reviews": ["Cozy and clean", "Nice host", "Would stay again"],
     },
     {
+        "id" : 3,
         "location": "Boston, USA",
         "safety": "Low",
         "housing_type": "Hostel",
@@ -30,6 +33,7 @@ housing_listings = [
         "reviews": ["Good for backpackers", "Noisy at night", "Friendly staff"],
     },
     {
+        "id" : 4,
         "location": "Boston, USA",
         "safety": "High",
         "housing_type": "2-bedroom House",
