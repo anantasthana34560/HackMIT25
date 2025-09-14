@@ -30,7 +30,7 @@ st.markdown("""
         background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
         color: #212529;
     }
-    
+
     /* Main content styling */
     .main .block-container {
         background: rgba(255, 255, 255, 0.95);
@@ -39,7 +39,7 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         margin-top: 1rem;
     }
-    
+
     /* Buttons - Neutral design (no blue highlight) */
     .stButton > button {
         background: #ffffff !important;
@@ -51,7 +51,7 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
         transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease !important;
     }
-    
+
     .stButton > button:hover {
         background: #f8f9fa !important;
         border-color: #ced4da !important;
@@ -59,7 +59,7 @@ st.markdown("""
         transform: translateY(-1px) !important;
         color: #212529 !important;
     }
-    
+
     /* Form submit buttons */
     .stFormSubmitButton > button {
         background: #ffffff !important;
@@ -71,13 +71,13 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
         transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease !important;
     }
-    
+
     .stFormSubmitButton > button:hover {
         background: #f8f9fa !important;
         border-color: #ced4da !important;
         color: #212529 !important;
     }
-    
+
     /* Base buttons reset */
     button {
         background: #ffffff !important;
@@ -85,7 +85,7 @@ st.markdown("""
         border: 1px solid #dee2e6 !important;
         border-radius: 6px !important;
     }
-    
+
     button:hover {
         background: #f8f9fa !important;
         color: #212529 !important;
@@ -103,7 +103,7 @@ st.markdown("""
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.08) !important;
         transform: translateY(0) !important;
     }
-    
+
     /* Form inputs - More specific targeting */
     .stTextInput > div > div > input {
         background: white !important;
@@ -111,40 +111,40 @@ st.markdown("""
         border-radius: 8px !important;
         color: #495057 !important;
     }
-    
+
     .stTextInput > div > div > input:focus {
         border-color: #007bff !important;
         box-shadow: 0 0 8px rgba(0, 123, 255, 0.2) !important;
         background: white !important;
     }
-    
+
     .stSelectbox > div > div > div {
         background: white !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
         color: #495057 !important;
     }
-    
+
     .stTextArea > div > div > textarea {
         background: white !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
         color: #495057 !important;
     }
-    
+
     /* Fix input containers */
     .stTextInput > div {
         background: transparent !important;
     }
-    
+
     .stSelectbox > div {
         background: transparent !important;
     }
-    
+
     .stTextArea > div {
         background: transparent !important;
     }
-    
+
     /* Fix input wrappers */
     input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
         background: white !important;
@@ -152,21 +152,21 @@ st.markdown("""
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     textarea {
         background: white !important;
         color: #495057 !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     select {
         background: white !important;
         color: #495057 !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
         background: transparent;
@@ -174,7 +174,7 @@ st.markdown("""
         padding: 0;
         border-radius: 0;
     }
-    
+
     .stTabs [data-baseweb="tab"] {
         background: transparent !important;
         color: #6c757d;
@@ -185,20 +185,20 @@ st.markdown("""
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
     }
-    
+
     .stTabs [data-baseweb="tab"]:hover {
         background: transparent !important;
         color: #495057;
         border-bottom: 3px solid #dee2e6;
     }
-    
+
     .stTabs [aria-selected="true"] {
         background: transparent !important;
         color: #212529 !important;
         border-bottom: 3px solid #495057 !important;
         font-weight: 700 !important;
     }
-    
+
     /* Success and error messages */
     .stSuccess {
         background: #d4edda;
@@ -207,7 +207,7 @@ st.markdown("""
         border-radius: 8px;
         padding: 1rem;
     }
-    
+
     .stError {
         background: #f8d7da;
         color: #721c24;
@@ -215,55 +215,55 @@ st.markdown("""
         border-radius: 8px;
         padding: 1rem;
     }
-    
+
     /* Headers and text */
     h1, h2, h3 {
         color: #212529;
     }
-    
+
     /* Fix all text colors */
     .stMarkdown, .stText, p, span, div {
         color: #212529 !important;
     }
-    
+
     /* Fix metric boxes */
     .metric-container {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix info boxes */
     .stAlert {
         background: white !important;
         color: #212529 !important;
         border: 1px solid #dee2e6;
     }
-    
+
     /* Fix expander */
     .streamlit-expanderHeader {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     .streamlit-expanderContent {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix columns and containers */
     .element-container {
         background: transparent !important;
     }
-    
+
     /* Fix any remaining dark elements */
     [data-testid="stVerticalBlock"] {
         background: transparent !important;
     }
-    
+
     [data-testid="column"] {
         background: transparent !important;
     }
-    
+
     /* Fix form containers */
     .stForm {
         background: rgba(255, 255, 255, 0.8) !important;
@@ -271,19 +271,19 @@ st.markdown("""
         border-radius: 10px;
         padding: 1rem;
     }
-    
+
     /* Fix radio buttons */
     .stRadio > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix checkboxes */
     .stCheckbox > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix date input */
     .stDateInput > div > div > input {
         background: white !important;
@@ -291,57 +291,57 @@ st.markdown("""
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     /* Fix date input calendar popup */
     .stDateInput [data-baseweb="calendar"] {
         background: white !important;
         color: #212529 !important;
         border: 1px solid #dee2e6 !important;
     }
-    
+
     .stDateInput [data-baseweb="calendar"] * {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix calendar header */
     .stDateInput [data-baseweb="calendar-header"] {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix calendar days */
     .stDateInput [data-baseweb="day"] {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     .stDateInput [data-baseweb="day"]:hover {
         background: #f8f9fa !important;
         color: #212529 !important;
     }
-    
+
     /* Fix selected date */
     .stDateInput [data-baseweb="day"][aria-selected="true"] {
         background: #007bff !important;
         color: white !important;
     }
-    
+
     /* Fix date input container */
     .stDateInput > div {
         background: transparent !important;
     }
-    
+
     /* Fix any remaining calendar elements */
     [data-testid="stDateInput"] {
         background: white !important;
     }
-    
+
     [data-testid="stDateInput"] * {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix multiselect and selectbox dropdown styling */
     .stMultiSelect > div > div {
         background: white !important;
@@ -349,52 +349,52 @@ st.markdown("""
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     .stMultiSelect > div > div > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     .stMultiSelect [data-baseweb="select"] {
         background: white !important;
         color: #212529 !important;
         border: 2px solid #e9ecef !important;
     }
-    
+
     .stMultiSelect [data-baseweb="select"] > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix selectbox dropdown */
     .stSelectbox > div {
         background: white !important;
     }
-    
+
     .stSelectbox > div > div {
         background: white !important;
         color: #212529 !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     .stSelectbox [data-baseweb="select"] {
         background: white !important;
         color: #212529 !important;
         border: 2px solid #e9ecef !important;
         border-radius: 8px !important;
     }
-    
+
     .stSelectbox [data-baseweb="select"] > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     .stSelectbox [data-baseweb="select"] input {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix dropdown menus */
     [data-baseweb="popover"] {
         background: white !important;
@@ -402,45 +402,45 @@ st.markdown("""
         border: 1px solid #dee2e6 !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
-    
+
     [data-baseweb="menu"] {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     [data-baseweb="menu-item"] {
         background: white !important;
         color: #212529 !important;
         padding: 8px 12px !important;
     }
-    
+
     [data-baseweb="menu-item"]:hover {
         background: #f8f9fa !important;
         color: #212529 !important;
     }
-    
+
     /* Fix specific dropdown text visibility */
     .stSelectbox div[data-testid="stSelectbox"] > div > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     .stSelectbox div[data-testid="stSelectbox"] > div > div > div {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Fix tags in multiselect */
     .stMultiSelect [data-baseweb="tag"] {
         background: #007bff !important;
         color: white !important;
     }
-    
+
     /* Fix labels and help text */
     .stMultiSelect label, .stSelectbox label {
         color: #212529 !important;
     }
-    
+
     /* Fix any remaining dark containers */
     [data-testid="stForm"] {
         background: rgba(255, 255, 255, 0.9) !important;
@@ -448,16 +448,16 @@ st.markdown("""
         border-radius: 10px !important;
         padding: 1rem !important;
     }
-    
+
     /* Fix slider styling */
     .stSlider > div > div > div {
         background: white !important;
     }
-    
+
     .stSlider [data-baseweb="slider"] {
         background: white !important;
     }
-    
+
     /* Sidebar styling */
     .css-1d391kg {
         background: rgba(255, 255, 255, 0.95);
@@ -509,29 +509,29 @@ st.markdown("""
     * {
         color: #212529 !important;
     }
-    
+
     div, span, p, input, select, option {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Streamlit specific overrides */
     .stSelectbox *, .stMultiSelect *, .stDateInput * {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     /* Force dropdown visibility */
     [class*="select"], [class*="Select"], [class*="dropdown"] {
         background: white !important;
         color: #212529 !important;
     }
-    
+
     [class*="select"] *, [class*="Select"] *, [class*="dropdown"] * {
         background: white !important;
         color: #212529 !important;
     }
-            
+
             /* ...existing CSS... */
 
     /* --- Calendar (date input) improvements --- */
@@ -561,7 +561,7 @@ st.markdown("""
         font-weight: bold !important;
         outline: none !important;
     }
-            
+
                 /* --- Calendar (date input) improvements --- */
     .stDateInput [data-baseweb="calendar"] {
         background: #fff !important;
@@ -965,7 +965,7 @@ class TravelEaseApp:
                 height=150,
                 help="Share your travel dreams, preferences, and any specific requirements you have in mind."
             )
-            
+
             # Ideas section below the text area
             st.markdown("""
             <div style='background: rgba(0, 123, 255, 0.05); padding: 1rem; border-radius: 10px; margin: 1rem 0;'>
@@ -977,16 +977,16 @@ class TravelEaseApp:
                 </p>
             </div>
             """, unsafe_allow_html=True)
-            
+
             # Additional quick options
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 trip_duration = st.selectbox("How long is your trip?", [
                     "Weekend (2-3 days)", "Short trip (4-7 days)",
                     "Week-long (8-14 days)", "Extended (2-4 weeks)", "Month or longer"
                 ])
-                
+
             with col2:
                 travel_dates = st.date_input(
                     "Preferred travel dates",
@@ -1835,8 +1835,45 @@ class TravelEaseApp:
                     'cuisine_types': [c.capitalize() for c in extracted.get('cuisine_types', [])],
                     'experience_types': [e.capitalize() for e in extracted.get('experience_types', [])],
                 }
+                # Normalize location to match data format
+                raw_location = extracted.get('location') or 'Boston'
+
+                def normalize_location(location):
+                    """Normalize location to match data format (City, Country)"""
+                    if not location:
+                        return 'Boston, USA'
+
+                    location = location.strip()
+
+                    # If already has country format, capitalize properly
+                    if ',' in location:
+                        parts = [part.strip().title() for part in location.split(',')]
+                        return ', '.join(parts)
+
+                    # Single city name - add default country based on common cities
+                    city_lower = location.lower()
+                    city_title = location.title()
+
+                    # Map common cities to their countries
+                    city_country_map = {
+                        'boston': 'Boston, USA',
+                        'new york': 'New York, USA',
+                        'san francisco': 'San Francisco, USA',
+                        'los angeles': 'Los Angeles, USA',
+                        'chicago': 'Chicago, USA',
+                        'paris': 'Paris, France',
+                        'london': 'London, UK',
+                        'tokyo': 'Tokyo, Japan',
+                        'sydney': 'Sydney, Australia',
+                        'toronto': 'Toronto, Canada',
+                    }
+
+                    return city_country_map.get(city_lower, f'{city_title}, USA')
+
+                normalized_location = normalize_location(raw_location)
+
                 travel_info = {
-                    'location': extracted.get('location') or 'Boston, USA',
+                    'location': normalized_location,
                     'dates': dates,
                     'desired_amenities': extracted.get('desired_amenities', []),
                     'travelers': st.session_state.ai_travelers,
@@ -1908,19 +1945,16 @@ class TravelEaseApp:
                             st.caption(f"Amenities: {amen_str}")
                         if reviews:
                             st.write(f"“{reviews[0]}”")
-                        st.code(_id)
                     elif key == 'cuisine':
                         st.markdown(f"**{item.get('cuisine_type','Cuisine')}** · {item.get('location','')}")
                         kind = item.get('pricing')
                         if kind:
                             st.caption(f"Style: {kind}")
-                        st.code(_id)
                     else:
                         st.markdown(f"**{item.get('experience','Experience')}** · {item.get('location','')}")
                         kw = item.get('keyword')
                         if kw:
                             st.caption(f"Category: {kw}")
-                        st.code(_id)
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button(f"👎 Pass {label}", key=f"pass_{key}_{idx}", use_container_width=True):
@@ -1930,6 +1964,9 @@ class TravelEaseApp:
                         if st.button(f"❤️ Like {label}", key=f"like_{key}_{idx}", use_container_width=True):
                             st.session_state.ai_like[key].append(_id)
                             st.session_state.ai_idx[key] = idx + 1
+                            # If housing is selected, skip to final itinerary
+                            if key == 'housing':
+                                st.session_state.ai_step = 'final'
                             st.rerun()
                 else:
                     st.success(f"No more {label.lower()} to review.")
@@ -1960,7 +1997,6 @@ class TravelEaseApp:
                     if h:
                         st.markdown(f"**{h.get('housing_type','Stay')}** · {h.get('neighborhood', h.get('location',''))}")
                         st.caption(", ".join(h.get('amenities', [])))
-                        st.code(_id)
             st.markdown("### 🍽️ Dining")
             cols = st.columns(3)
             for i, _id in enumerate(likes.get('cuisine', [])[:6]):
@@ -1968,7 +2004,6 @@ class TravelEaseApp:
                     c = cuisine_id_dict.get(_id)
                     if c:
                         st.markdown(f"**{c.get('cuisine_type','Cuisine')}** · {c.get('location','')}")
-                        st.code(_id)
             st.markdown("### 🎯 Experiences")
             cols = st.columns(3)
             for i, _id in enumerate(likes.get('experience', [])[:6]):
@@ -1977,7 +2012,6 @@ class TravelEaseApp:
                     if e:
                         st.markdown(f"**{e.get('experience','Experience')}** · {e.get('location','')}")
                         st.caption(e.get('keyword',''))
-                        st.code(_id)
 
             st.markdown("---")
             if st.button("🧠 Generate Packing List + Events", use_container_width=True):
