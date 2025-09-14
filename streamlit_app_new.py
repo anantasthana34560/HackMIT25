@@ -8,7 +8,7 @@ from PIL import Image
 import io
 import requests
 from extractor import extract_travel_info
-from app_cool import ai_travel_agent_agno
+from app_cool import ai_travel_agent_agno, second_stage_agent
 from housing_listings import housing_id_dict
 from cuisine_listings import cuisine_id_dict
 from experience_listings import experience_id_dict
@@ -1393,6 +1393,18 @@ class TravelEaseApp:
                         st.markdown(f"**{e.get('experience','Experience')}** · {e.get('location','')}")
                         st.caption(e.get('keyword',''))
                         st.code(_id)
+
+            st.markdown("---")
+            if st.button("🧠 Generate Packing List + Events", use_container_width=True):
+                with st.spinner('Consulting travel brain...'):
+                    username = (st.session_state.user_profile.get('email') if st.session_state.get('user_profile') else 'guest') or 'guest'
+                    enrich = second_stage_agent(username, likes, travel_info)
+                st.subheader("Packing List")
+                for item in enrich.get('packing_list', []):
+                    st.write(f"- {item}")
+                st.subheader("Events & Festivals")
+                for ev in enrich.get('events', []):
+                    st.write(f"- {ev}")
 
             if st.button("🔁 Start New Plan", use_container_width=True):
                 st.session_state.ai_step = 'input'

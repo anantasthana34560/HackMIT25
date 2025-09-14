@@ -51,6 +51,8 @@ def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
 # ===== Agno Agent (Claude) =====
 from agno.agent import Agent
 from agno.models.anthropic import Claude
+from tools.web_tools import search_events, get_weather
+from user_store import get_user, update_user
 from agno.tools import tool
 
 housing_agent = []
@@ -195,6 +197,34 @@ def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str
     out.cuisine_ids = [i for i in out.cuisine_ids if i in valid_c]
     out.experience_ids = [i for i in out.experience_ids if i in valid_e]
     return out
+
+
+def second_stage_agent(username: str, likes: Dict[str, List[str]], travel_info: Dict[str, Any]) -> Dict[str, Any]:
+    """After swipes: build itinerary scaffold, packing list, events using tools, and update per-user memory state."""
+    user_record = get_user(username)
+    # Minimal state increment
+    history = user_record.get('history', [])
+    history.append({'likes': likes, 'travel_info': travel_info})
+    update_user(username, {'history': history})
+
+    system = (
+        "Create a concise day-by-day itinerary outline from liked items, then propose a packing list tailored to location and dates, "
+        "and list 3-5 relevant events or festivals. Keep JSON only with keys: itinerary, packing_list, events."
+    )
+    user = {
+        'likes': likes,
+        'travel_info': travel_info,
+        'instructions': 'Use the tools get_weather and search_events to ground recommendations.'
+    }
+
+    agent = Agent(model=Claude(id="claude-opus-4-1-20250805"), tools=[get_weather, search_events])
+    raw = agent.run(json.dumps(user), system=system)
+    text = raw.content if hasattr(raw, 'content') else str(raw)
+    # Best effort JSON load
+    try:
+        return json.loads(text)
+    except Exception:
+        return {'itinerary': [], 'packing_list': [], 'events': []}
 
 if __name__ == "__main__":
     from preferences import user_preferences
