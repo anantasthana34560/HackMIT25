@@ -66,6 +66,7 @@ df = pd.DataFrame(data)
 # Convert lists to strings for CSV compatibility
 df['amenities'] = df['amenities'].apply(lambda x: ', '.join(x))
 df['reviews'] = df['reviews'].apply(lambda x: '; '.join(x))
+df['id'] = f'H{df.index + 1}'
 
 
 # Save to a file
