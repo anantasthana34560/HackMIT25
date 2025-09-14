@@ -2,25 +2,44 @@
 <html>
 <head>
     <title>TravelGen</title>
+    <style>
+        body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin:0; background:linear-gradient(135deg,#0f172a,#111827); color:#e5e7eb; }
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 16px; }
+        .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); backdrop-filter: blur(8px); }
+        h1 { font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; }
+        p.sub { color:#9ca3af; margin:0 0 24px; }
+        label { display:block; font-size: 14px; color:#cbd5e1; margin: 16px 0 6px; }
+        input[type=text], textarea { width:100%; padding:12px 14px; border-radius:12px; border:1px solid #334155; background:#0b1220; color:#e5e7eb; outline:none; }
+        textarea { min-height: 140px; resize: vertical; }
+        .row { display:flex; gap:12px; }
+        .row > * { flex:1; }
+        button.primary { margin-top:16px; padding:12px 16px; border-radius:12px; border:none; background:linear-gradient(135deg,#22d3ee,#6366f1); color:white; font-weight:700; cursor:pointer; }
+        button.primary:hover { filter: brightness(1.05); }
+    </style>
 </head>
 <body>
-    <h1>Welcome to TravelGen</h1>
-    <form action="/plan" method="post">
-        <label>Destination:</label>
-        <input type="text" name="destination" required><br><br>
+    <div class="container">
+        <div class="card">
+            <h1>Design your perfect trip</h1>
+            <p class="sub">Tell us what you love. We’ll curate stays, eats, and experiences you’ll vibe with.</p>
+            <form action="/start" method="post">
+                <label>Tell us about your trip</label>
+                <textarea name="freeform_text" placeholder="We are two travelers visiting Boston. We love Italian food, museums, and kayak adventures. We'd like WiFi and a kitchen."></textarea>
 
-        <label>Travel Dates:</label>
-        <input type="text" name="dates" placeholder="e.g. March 10-20"><br><br>
+                <div class="row">
+                    <div>
+                        <label>Dates</label>
+                        <input type="text" name="dates" placeholder="2025-02-10, 2025-02-11, 2025-02-12">
+                    </div>
+                    <div>
+                        <label>Travelers</label>
+                        <input type="text" name="travelers" placeholder="2">
+                    </div>
+                </div>
 
-        <label>Style:</label>
-        <select name="style">
-            <option value="relaxing">Relaxing</option>
-            <option value="adventure">Adventure</option>
-            <option value="cultural">Cultural</option>
-            <option value="romantic">Romantic</option>
-        </select><br><br>
-
-        <button type="submit">Plan My Trip</button>
-    </form>
+                <button class="primary" type="submit">Find my matches</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Itinerary</title>
+    <style>
+        body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; background:linear-gradient(135deg,#0f172a,#111827); color:#e5e7eb; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 40px 16px; }
+        h1 { margin:0 0 8px; font-weight:800; letter-spacing:-0.02em; }
+        p.sub { color:#9ca3af; margin:0 0 24px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+        .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); backdrop-filter: blur(8px); }
+        .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#111827; border:1px solid #334155; color:#cbd5e1; font-size:12px; margin-right:6px; }
+        .section { margin: 24px 0; }
+        .section h2 { margin:0 0 12px; font-size:18px; color:#cbd5e1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your itinerary</h1>
+        <p class="sub">Dates: {{ ', '.join(travel_info.get('dates', [])) }} · Location: {{ travel_info.get('location') }}</p>
+
+        <div class="section">
+            <h2>Stays</h2>
+            <div class="grid">
+            {% for h in housing_cards %}
+                <div class="card">
+                    <div><strong>{{ h.get('housing_type', 'Stay') }}</strong> — {{ h.get('neighborhood', h.get('location', '')) }}</div>
+                    <div style="margin:8px 0;">
+                        {% for a in h.get('amenities', []) %}<span class="pill">{{ a }}</span>{% endfor %}
+                    </div>
+                    <div>Safety: {{ h.get('safety', h.get('safety_rating', 'N/A')) }}</div>
+                    <div class="pill">{{ h.get('id') }}</div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Dining</h2>
+            <div class="grid">
+            {% for c in cuisine_cards %}
+                <div class="card">
+                    <div><strong>{{ c.get('cuisine_type','Cuisine') }}</strong> — {{ c.get('location','') }}</div>
+                    <div class="pill">{{ c.get('id') }}</div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Experiences</h2>
+            <div class="grid">
+            {% for e in experience_cards %}
+                <div class="card">
+                    <div><strong>{{ e.get('experience','Experience') }}</strong> — {{ e.get('location','') }}</div>
+                    <div class="pill">{{ e.get('keyword','') }}</div>
+                    <div class="pill">{{ e.get('id') }}</div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

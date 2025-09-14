@@ -41,6 +41,10 @@ def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
         #     continue
         if h.get("housing_type") not in user_preferences["housing_type"]:
             continue
+        # Match amenities from travel_info (desired_amenities)
+        desired = set(travel_info.get("desired_amenities", []))
+        if desired and not desired.intersection(set(h.get("amenities", []))):
+            continue
         out.append(h)
     return out
 
