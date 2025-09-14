@@ -47,6 +47,7 @@ for _ in range(NUM_ROWS):
     cost = int(round(cost / 5) * 5) # Round to nearest 5
 
     listing = {
+        "location": "Boston, USA",
         "safety_rating": round(random.uniform(3.5, 5.0), 2),
         "neighborhood": random.choice(BOSTON_NEIGHBORHOODS),
         "housing_type": housing_type,
@@ -66,7 +67,8 @@ df = pd.DataFrame(data)
 # Convert lists to strings for CSV compatibility
 df['amenities'] = df['amenities'].apply(lambda x: ', '.join(x))
 df['reviews'] = df['reviews'].apply(lambda x: '; '.join(x))
-df['id'] = f'H{df.index + 1}'
+# Generate per-row string IDs like H1, H2, ... (avoid a single f-string over the whole Index)
+df['id'] = ['H{}'.format(i + 1) for i in df.index]
 
 
 # Save to a file
@@ -75,6 +77,10 @@ df.to_csv("boston_airbnb_data.csv", index=False)
 print("Successfully generated boston_airbnb_data.csv with 200 listings.")
 
 
+# Convert amenities back to list form for in-app filtering/scoring
 housing_listings = df.to_dict(orient='records')
+for rec in housing_listings:
+    if isinstance(rec.get('amenities'), str):
+        rec['amenities'] = [a.strip() for a in rec['amenities'].split(',') if a.strip()]
 
 housing_id_dict = {a['id']: a for a in housing_listings}

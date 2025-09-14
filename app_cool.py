@@ -31,13 +31,15 @@ def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, 
 
 def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    dates = travel_info.get("dates", [])
+    # dates = travel_info.get("dates", [])
     # require all requested dates to be in scheduled_dates
     out = []
     for h in housing_listings:
         if h.get("location") != location:
             continue
-        if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
+        # if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
+        #     continue
+        if h.get("housing_type") not in user_preferences["housing_type"]:
             continue
         out.append(h)
     return out
