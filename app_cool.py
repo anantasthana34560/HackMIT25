@@ -7,10 +7,7 @@
 from housing_listings import housing_listings
 from cuisine_listings import cuisine_listings
 from experience_listings import experience_listings
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
 # --- Housing Filter ---
 def filter_housing(user_preferences, travel_info):
     options = []
@@ -52,41 +49,33 @@ def filter_experiences(user_preferences, travel_info):
         options.append(exp)
     return options
 
-# --- OpenAI Agent Template (v1 SDK) ---
-# You must install openai: pip install openai
-# and set your API key as an environment variable or directly in the code below.
-import openai
-import os
+# --- Agno Agent with Claude ---
+from agno.agent import Agent
+from agno.models.anthropic import Claude
+import os 
 
-def ai_travel_agent(user_message, user_preferences, travel_info):
+def ai_travel_agent_agno(user_message, user_preferences, travel_info):
     housing_options = filter_housing(user_preferences, travel_info)
     cuisine_options = filter_cuisine(user_preferences, travel_info)
     experience_options = filter_experiences(user_preferences, travel_info)
 
-    # Prepare context for the agent
     context = f"""
-User Preferences: {user_preferences}\nTravel Info: {travel_info}\n
-Housing Options: {housing_options}\nCuisine Options: {cuisine_options}\nExperience Options: {experience_options}\n"""
+User Preferences: {user_preferences}\nTravel Info: {travel_info}\n\nHousing Options: {housing_options}\nCuisine Options: {cuisine_options}\nExperience Options: {experience_options}\n"""
 
-    # Use OpenAI v1 client
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    client = openai.OpenAI(api_key=openai_api_key)
-    response = client.chat.completions.create(
-        model="gpt-4o",  # or 'gpt-4', 'gpt-3.5-turbo', etc.
-        messages=[
-            {"role": "system", "content": "You are a helpful travel agent AI. Use the provided options and preferences to make recommendations."},
-            {"role": "user", "content": user_message + "\n" + context}
-        ],
-        max_tokens=500
+    prompt = (
+        "You are a helpful travel agent AI. Use the provided options and preferences to make recommendations.\n"
+        f"{user_message}\n{context}"
     )
-    return response.choices[0].message.content
+
+    agent = Agent(model=Claude(id="claude-opus-4-1-20250805"))
+    agent.print_response(prompt)
 
 # --- Example Usage ---
 if __name__ == "__main__":
     from preferences import user_preferences
     from travel_info import travel_info
     user_message = "Plan my trip!"
-    print(ai_travel_agent(user_message, user_preferences, travel_info))
+    ai_travel_agent_agno(user_message, user_preferences, travel_info)
 
 
 def get_recommendations(city, start_date, end_date, user_profile):
@@ -108,3 +97,4 @@ def update_user_profile(user_profile, house, liked):
         for amenity in house.amenities:
             user_profile['amenities'][amenity] -= 1
     # Save user_profile to DB
+
