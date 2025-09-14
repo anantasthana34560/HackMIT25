@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# --- Load env and OpenAI ---
+# --- Load environment variables ---
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'supersecret'
 db = SQLAlchemy(app)
 
-# --- Login manager ---
+# --- Flask-Login setup ---
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -25,8 +25,8 @@ login_manager.login_view = "login"
 # --- Database models ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
-    password = db.Column(db.String(200))
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
 class Trip(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +34,8 @@ class Trip(db.Model):
     destination = db.Column(db.String(120))
     dates = db.Column(db.String(120))
     style = db.Column(db.String(120))
+    cuisine = db.Column(db.String(120))
+    activities = db.Column(db.String(120))
     plan = db.Column(db.Text)
 
 with app.app_context():
@@ -44,13 +46,12 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # --- Routes ---
-
-# Home
 @app.route("/")
-def home():
-    return render_template("home.html", user=current_user)
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
-# Signup
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -64,7 +65,6 @@ def signup():
         return redirect(url_for("login"))
     return render_template("signup.html")
 
-# Login
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -77,22 +77,36 @@ def login():
         return "Invalid credentials!"
     return render_template("login.html")
 
-# Logout
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
-# Plan AI Trip
+@app.route("/home")
+@login_required
+def home():
+    return render_template("home.html", user=current_user)
+
 @app.route("/plan", methods=["POST"])
 @login_required
 def plan():
     destination = request.form.get("destination")
     dates = request.form.get("dates")
     style = request.form.get("style")
+    cuisine = request.form.get("cuisine")
+    activities = request.form.get("activities")
 
-    prompt = f"Create a short 3-day itinerary for {destination} ({dates}), style: {style}. Give each day as a separate line."
+    prompt = f"""
+    You are a travel expert. Create a 3-day itinerary for a trip:
+    - Destination: {destination}
+    - Dates: {dates}
+    - Travel style: {style}
+    - Cuisine preference: {cuisine}
+    - Activities preference: {activities}
+    Include: recommended restaurants, excursions/activities, and day-by-day suggestions.
+    Return it in a clear text format with bullet points or days separated.
+    """
 
     try:
         response = client.chat.completions.create(
@@ -101,13 +115,21 @@ def plan():
                 {"role": "system", "content": "You are an expert travel planner."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300
+            max_tokens=500
         )
         plan_text = response.choices[0].message.content
         plan_lines = plan_text.split("\n")
 
-        # Save trip to database with user_id
-        new_trip = Trip(user_id=current_user.id, destination=destination, dates=dates, style=style, plan=plan_text)
+        # Save trip
+        new_trip = Trip(
+            user_id=current_user.id,
+            destination=destination,
+            dates=dates,
+            style=style,
+            cuisine=cuisine,
+            activities=activities,
+            plan=plan_text
+        )
         db.session.add(new_trip)
         db.session.commit()
 
@@ -116,12 +138,460 @@ def plan():
 
     return render_template("results.html", plan=plan_lines)
 
-# View Saved Trips
 @app.route("/trips")
 @login_required
 def trips():
     user_trips = Trip.query.filter_by(user_id=current_user.id).all()
     return render_template("trips.html", trips=user_trips)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import os
+# from flask import Flask, render_template, request, redirect, url_for
+# from dotenv import load_dotenv
+# from openai import OpenAI
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+# from werkzeug.security import generate_password_hash, check_password_hash
+
+# # --- Load environment variables ---
+# load_dotenv()
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# # --- Flask setup ---
+# app = Flask(__name__)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trips.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SECRET_KEY'] = 'supersecret'
+# db = SQLAlchemy(app)
+
+# # --- Flask-Login setup ---
+# login_manager = LoginManager()
+# login_manager.init_app(app)
+# login_manager.login_view = "login"
+
+# # --- Database models ---
+# class User(UserMixin, db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True, nullable=False)
+#     password = db.Column(db.String(200), nullable=False)
+
+# class Trip(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+#     destination = db.Column(db.String(120))
+#     dates = db.Column(db.String(120))
+#     style = db.Column(db.String(120))
+#     plan = db.Column(db.Text)
+
+# # Create DB if not exists
+# with app.app_context():
+#     db.create_all()
+
+# # --- User loader ---
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.get(int(user_id))
+
+# # --- Routes ---
+# @app.route("/")
+# def home():
+#     return render_template("home.html", user=current_user)
+
+# @app.route("/signup", methods=["GET", "POST"])
+# def signup():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = generate_password_hash(request.form["password"])
+#         if User.query.filter_by(username=username).first():
+#             return "Username already exists!"
+#         new_user = User(username=username, password=password)
+#         db.session.add(new_user)
+#         db.session.commit()
+#         return redirect(url_for("login"))
+#     return render_template("signup.html")
+
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         user = User.query.filter_by(username=username).first()
+#         if user and check_password_hash(user.password, password):
+#             login_user(user)
+#             return redirect(url_for("home"))
+#         return "Invalid credentials!"
+#     return render_template("login.html")
+
+# @app.route("/logout")
+# @login_required
+# def logout():
+#     logout_user()
+#     return redirect(url_for("home"))
+
+# @app.route("/plan", methods=["POST"])
+# @login_required
+# def plan():
+#     destination = request.form.get("destination")
+#     dates = request.form.get("dates")
+#     style = request.form.get("style")
+#     cuisine = request.form.get("cuisine")
+#     activities = request.form.get("activities")
+
+#     prompt = f"""
+#     You are a travel expert. Create a 3-day itinerary for a trip:
+#     - Destination: {destination}
+#     - Dates: {dates}
+#     - Travel style: {style}
+#     - Cuisine preference: {cuisine}
+#     - Activities preference: {activities}
+#     Include: recommended restaurants, excursions/activities, and day-by-day suggestions.
+#     Return it in a clear text format with bullet points or days separated.
+#     """
+
+#     try:
+#         response = client.chat.completions.create(
+#             model="gpt-4o-mini",
+#             messages=[
+#                 {"role": "system", "content": "You are an expert travel planner."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=500
+#         )
+#         plan_text = response.choices[0].message.content
+#         plan_lines = plan_text.split("\n")
+
+#         # Save trip with extra info
+#         new_trip = Trip(
+#             user_id=current_user.id,
+#             destination=destination,
+#             dates=dates,
+#             style=style,
+#             plan=plan_text
+#         )
+#         db.session.add(new_trip)
+#         db.session.commit()
+
+#     except Exception as e:
+#         plan_lines = [f"Error: {e}"]
+
+#     return render_template("results.html", plan=plan_lines)
+
+# def plan():
+#     destination = request.form.get("destination")
+#     dates = request.form.get("dates")
+#     style = request.form.get("style")
+
+#     prompt = f"Create a short 3-day itinerary for {destination} ({dates}), style: {style}. Give each day as a separate line."
+
+#     try:
+#         response = client.chat.completions.create(
+#             model="gpt-4o-mini",
+#             messages=[
+#                 {"role": "system", "content": "You are an expert travel planner."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=300
+#         )
+#         plan_text = response.choices[0].message.content
+#         plan_lines = plan_text.split("\n")
+
+#         # Save trip
+#         new_trip = Trip(user_id=current_user.id, destination=destination, dates=dates, style=style, plan=plan_text)
+#         db.session.add(new_trip)
+#         db.session.commit()
+
+#     except Exception as e:
+#         plan_lines = [f"Error: {e}"]
+
+#     return render_template("results.html", plan=plan_lines)
+
+@app.route("/trips")
+@login_required
+def trips():
+    user_trips = Trip.query.filter_by(user_id=current_user.id).all()
+    return render_template("trips.html", trips=user_trips)
+
+# --- Run app ---
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import os
+# from flask import Flask, render_template, request, redirect, url_for
+# from dotenv import load_dotenv
+# from openai import OpenAI
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+# from werkzeug.security import generate_password_hash, check_password_hash
+
+# # --- Load env and OpenAI ---
+# load_dotenv()
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# # --- Flask setup ---
+# app = Flask(__name__)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trips.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SECRET_KEY'] = 'supersecret'
+# db = SQLAlchemy(app)
+
+# # --- Login manager ---
+# login_manager = LoginManager()
+# login_manager.init_app(app)
+# login_manager.login_view = "login"
+
+# # --- Database models ---
+# class User(UserMixin, db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True)
+#     password = db.Column(db.String(200))
+
+# class Trip(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+#     destination = db.Column(db.String(120))
+#     dates = db.Column(db.String(120))
+#     style = db.Column(db.String(120))
+#     plan = db.Column(db.Text)
+
+# with app.app_context():
+#     db.create_all()
+
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.get(int(user_id))
+
+# # --- Routes ---
+
+# # Home
+# @app.route("/")
+# def home():
+#     return render_template("home.html", user=current_user)
+
+# # Signup
+# @app.route("/signup", methods=["GET", "POST"])
+# def signup():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = generate_password_hash(request.form["password"])
+#         if User.query.filter_by(username=username).first():
+#             return "Username already exists!"
+#         new_user = User(username=username, password=password)
+#         db.session.add(new_user)
+#         db.session.commit()
+#         return redirect(url_for("login"))
+#     return render_template("signup.html")
+
+# # Login
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         user = User.query.filter_by(username=username).first()
+#         if user and check_password_hash(user.password, password):
+#             login_user(user)
+#             return redirect(url_for("home"))
+#         return "Invalid credentials!"
+#     return render_template("login.html")
+
+# # Logout
+# @app.route("/logout")
+# @login_required
+# def logout():
+#     logout_user()
+#     return redirect(url_for("home"))
+
+# # Plan AI Trip
+# @app.route("/plan", methods=["POST"])
+# @login_required
+# def plan():
+#     destination = request.form.get("destination")
+#     dates = request.form.get("dates")
+#     style = request.form.get("style")
+
+#     prompt = f"Create a short 3-day itinerary for {destination} ({dates}), style: {style}. Give each day as a separate line."
+
+#     try:
+#         response = client.chat.completions.create(
+#             model="gpt-4o-mini",
+#             messages=[
+#                 {"role": "system", "content": "You are an expert travel planner."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=300
+#         )
+#         plan_text = response.choices[0].message.content
+#         plan_lines = plan_text.split("\n")
+
+#         # Save trip to database with user_id
+#         new_trip = Trip(user_id=current_user.id, destination=destination, dates=dates, style=style, plan=plan_text)
+#         db.session.add(new_trip)
+#         db.session.commit()
+
+#     except Exception as e:
+#         plan_lines = [f"Error: {e}"]
+
+#     return render_template("results.html", plan=plan_lines)
+
+# # View Saved Trips
+# @app.route("/trips")
+# @login_required
+# def trips():
+#     user_trips = Trip.query.filter_by(user_id=current_user.id).all()
+#     return render_template("trips.html", trips=user_trips)
+
+
+
+
+
+# import os
+# from flask import Flask, render_template, request, redirect, url_for
+# from dotenv import load_dotenv
+# from openai import OpenAI
+# from flask_sqlalchemy import SQLAlchemy
+# from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+# from werkzeug.security import generate_password_hash, check_password_hash
+
+# # --- Load env and OpenAI ---
+# load_dotenv()
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# # --- Flask setup ---
+# app = Flask(__name__)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trips.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SECRET_KEY'] = 'supersecret'
+# db = SQLAlchemy(app)
+
+# # --- Login manager ---
+# login_manager = LoginManager()
+# login_manager.init_app(app)
+# login_manager.login_view = "login"
+
+# # --- Database models ---
+# class User(UserMixin, db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True)
+#     password = db.Column(db.String(200))
+
+# class Trip(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+#     destination = db.Column(db.String(120))
+#     dates = db.Column(db.String(120))
+#     style = db.Column(db.String(120))
+#     plan = db.Column(db.Text)
+
+# with app.app_context():
+#     db.create_all()
+
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.get(int(user_id))
+
+# # --- Routes ---
+
+# # Home
+# @app.route("/")
+# def home():
+#     return render_template("home.html", user=current_user)
+
+# # Signup
+# @app.route("/signup", methods=["GET", "POST"])
+# def signup():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = generate_password_hash(request.form["password"])
+#         if User.query.filter_by(username=username).first():
+#             return "Username already exists!"
+#         new_user = User(username=username, password=password)
+#         db.session.add(new_user)
+#         db.session.commit()
+#         return redirect(url_for("login"))
+#     return render_template("signup.html")
+
+# # Login
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         user = User.query.filter_by(username=username).first()
+#         if user and check_password_hash(user.password, password):
+#             login_user(user)
+#             return redirect(url_for("home"))
+#         return "Invalid credentials!"
+#     return render_template("login.html")
+
+# # Logout
+# @app.route("/logout")
+# @login_required
+# def logout():
+#     logout_user()
+#     return redirect(url_for("home"))
+
+# # Plan AI Trip
+# @app.route("/plan", methods=["POST"])
+# @login_required
+# def plan():
+#     destination = request.form.get("destination")
+#     dates = request.form.get("dates")
+#     style = request.form.get("style")
+
+#     prompt = f"Create a short 3-day itinerary for {destination} ({dates}), style: {style}. Give each day as a separate line."
+
+#     try:
+#         response = client.chat.completions.create(
+#             model="gpt-4o-mini",
+#             messages=[
+#                 {"role": "system", "content": "You are an expert travel planner."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=300
+#         )
+#         plan_text = response.choices[0].message.content
+#         plan_lines = plan_text.split("\n")
+
+#         # Save trip to database with user_id
+#         new_trip = Trip(user_id=current_user.id, destination=destination, dates=dates, style=style, plan=plan_text)
+#         db.session.add(new_trip)
+#         db.session.commit()
+
+#     except Exception as e:
+#         plan_lines = [f"Error: {e}"]
+
+#     return render_template("results.html", plan=plan_lines)
+
+# # View Saved Trips
+# @app.route("/trips")
+# @login_required
+# def trips():
+#     user_trips = Trip.query.filter_by(user_id=current_user.id).all()
+#     return render_template("trips.html", trips=user_trips)
 
 
 #  import os
