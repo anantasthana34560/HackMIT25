@@ -1,7 +1,21 @@
 import spacy
+import sys
 
-# Load spaCy English model
-nlp = spacy.load("en_core_web_sm")
+def get_spacy_model(model_name="en_core_web_sm"):
+    """
+    Loads the specified spaCy model, downloading it if not present.
+    """
+    try:
+        return spacy.load(model_name)
+    except OSError:
+        # Try to download the model
+        from spacy.cli import download
+        print(f"Downloading spaCy model '{model_name}'...", file=sys.stderr)
+        download(model_name)
+        return spacy.load(model_name)
+
+# Load spaCy English model, downloading if necessary
+nlp = get_spacy_model("en_core_web_sm")
 
 def extract_travel_info(paragraph):
     """
