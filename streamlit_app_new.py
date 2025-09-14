@@ -7,6 +7,11 @@ import plotly.graph_objects as go
 from PIL import Image
 import io
 import requests
+from extractor import extract_travel_info
+from app_cool import ai_travel_agent_agno
+from housing_listings import housing_id_dict
+from cuisine_listings import cuisine_id_dict
+from experience_listings import experience_id_dict
 
 # Configure Streamlit page
 st.set_page_config(
@@ -623,6 +628,28 @@ class TravelEaseApp:
             st.session_state.selected_experiences = []
         if 'final_itinerary' not in st.session_state:
             st.session_state.final_itinerary = {}
+
+        # AI Planner (direct agent) state
+        if 'ai_step' not in st.session_state:
+            st.session_state.ai_step = 'input'
+        if 'ai_text' not in st.session_state:
+            st.session_state.ai_text = ''
+        if 'ai_dates' not in st.session_state:
+            st.session_state.ai_dates = []
+        if 'ai_travelers' not in st.session_state:
+            st.session_state.ai_travelers = 1
+        if 'ai_user_prefs' not in st.session_state:
+            st.session_state.ai_user_prefs = {}
+        if 'ai_travel_info' not in st.session_state:
+            st.session_state.ai_travel_info = {}
+        if 'ai_candidates' not in st.session_state:
+            st.session_state.ai_candidates = {'housing_ids': [], 'cuisine_ids': [], 'experience_ids': []}
+        if 'ai_like' not in st.session_state:
+            st.session_state.ai_like = {'housing': [], 'cuisine': [], 'experience': []}
+        if 'ai_idx' not in st.session_state:
+            st.session_state.ai_idx = {'housing': 0, 'cuisine': 0, 'experience': 0}
+        if 'ai_final' not in st.session_state:
+            st.session_state.ai_final = {}
 
         # Host interface
         if 'is_host' not in st.session_state:
@@ -1743,6 +1770,13 @@ class TravelEaseApp:
                 st.rerun()
             st.sidebar.markdown("---")
 
+        # Quick access to AI planner
+        st.sidebar.markdown("## ⚡ AI Planner")
+        if st.sidebar.button("Open AI Planner", use_container_width=True):
+            st.session_state.ai_step = 'input'
+            st.session_state.current_step = 'ai_planner'
+            st.rerun()
+
         # Progress indicator for travel planning
         if st.session_state.current_step not in ['landing', 'preferences', 'host']:
             progress_steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7']
@@ -1774,8 +1808,178 @@ class TravelEaseApp:
             self.render_step7_itinerary()
         elif st.session_state.current_step == 'host':
             self.render_host_interface()
+        elif st.session_state.current_step == 'ai_planner':
+            self.render_ai_planner()
         else:
             st.error(f"Unknown step: {st.session_state.current_step}")
+
+    def render_ai_planner(self):
+        st.markdown("# ✨ AI Trip Planner")
+        st.caption("Describe your trip. We'll extract details, run the agent, and let you swipe on curated options.")
+
+        if st.session_state.ai_step == 'input':
+            with st.form("ai_input_form"):
+                st.session_state.ai_text = st.text_area(
+                    "Tell us about your trip",
+                    value=st.session_state.ai_text,
+                    placeholder="We are two travelers visiting Boston from Feb 10-12. We love Italian food, museums, and kayak adventures. We'd like WiFi and a kitchen.",
+                    height=160,
+                )
+                col1, col2 = st.columns(2)
+                with col1:
+                    ai_start = st.date_input("Start date", value=date.today())
+                with col2:
+                    ai_end = st.date_input("End date", value=date.today())
+                st.session_state.ai_travelers = st.number_input("Number of travelers", min_value=1, value=int(st.session_state.ai_travelers))
+                submitted = st.form_submit_button("Generate Matches", use_container_width=True)
+
+            if submitted:
+                # Extract
+                extracted = extract_travel_info(st.session_state.ai_text or "")
+                # Dates
+                dates = []
+                if ai_start:
+                    dates.append(ai_start.strftime('%Y-%m-%d'))
+                if ai_end and ai_end != ai_start:
+                    dates.append(ai_end.strftime('%Y-%m-%d'))
+
+                # Build dicts for agent
+                user_prefs = {
+                    'housing_type': extracted.get('housing_type', []) or ['House', 'Apartment', 'Hotel'],
+                    'preferred_amenities': extracted.get('desired_amenities', []),
+                    'safety_level': extracted.get('safety_level') or 'High',
+                    'price_range': extracted.get('price_range', [50, 150]),
+                    'cuisine_types': [c.capitalize() for c in extracted.get('cuisine_types', [])],
+                    'experience_types': [e.capitalize() for e in extracted.get('experience_types', [])],
+                }
+                travel_info = {
+                    'location': extracted.get('location') or 'Boston, USA',
+                    'dates': dates,
+                    'desired_amenities': extracted.get('desired_amenities', []),
+                    'travelers': st.session_state.ai_travelers,
+                    'cuisine_preferences': user_prefs['cuisine_types'],
+                    'experience_preferences': user_prefs['experience_types'],
+                }
+
+                with st.spinner('Running agent...'):
+                    recs = ai_travel_agent_agno(user_prefs, travel_info)
+
+                st.session_state.ai_user_prefs = user_prefs
+                st.session_state.ai_travel_info = travel_info
+                st.session_state.ai_candidates = {
+                    'housing_ids': recs.housing_ids,
+                    'cuisine_ids': recs.cuisine_ids,
+                    'experience_ids': recs.experience_ids,
+                }
+                st.session_state.ai_like = {'housing': [], 'cuisine': [], 'experience': []}
+                st.session_state.ai_idx = {'housing': 0, 'cuisine': 0, 'experience': 0}
+                st.session_state.ai_step = 'swipe'
+                st.success('Matches ready! Swipe to refine.')
+                st.rerun()
+
+        elif st.session_state.ai_step == 'swipe':
+            st.markdown("### Swipe your curated options")
+            cats = [('housing', 'Stay', housing_id_dict), ('cuisine', 'Dining', cuisine_id_dict), ('experience', 'Experience', experience_id_dict)]
+            done_all = True
+            for key, label, mapping in cats:
+                ids = st.session_state.ai_candidates.get(f'{key}_ids', [])
+                idx = st.session_state.ai_idx.get(key, 0)
+                st.markdown(f"#### {label}")
+                if idx < len(ids):
+                    done_all = False
+                    _id = ids[idx]
+                    item = mapping.get(_id)
+                    if not item:
+                        st.warning(f"Missing {_id}")
+                        st.session_state.ai_idx[key] = idx + 1
+                        st.rerun()
+                    st.write(f"ID: `{_id}`")
+                    if key == 'housing':
+                        st.write(item.get('housing_type', 'Stay'), '·', item.get('neighborhood', item.get('location','')))
+                        st.caption(", ".join(item.get('amenities', [])))
+                    elif key == 'cuisine':
+                        st.write(item.get('cuisine_type', 'Cuisine'), '·', item.get('location',''))
+                    else:
+                        st.write(item.get('experience','Experience'), '·', item.get('location',''))
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button(f"👎 Pass {label}", key=f"pass_{key}_{idx}", use_container_width=True):
+                            st.session_state.ai_idx[key] = idx + 1
+                            st.rerun()
+                    with c2:
+                        if st.button(f"❤️ Like {label}", key=f"like_{key}_{idx}", use_container_width=True):
+                            st.session_state.ai_like[key].append(_id)
+                            st.session_state.ai_idx[key] = idx + 1
+                            st.rerun()
+                else:
+                    st.success(f"No more {label.lower()} to review.")
+                st.divider()
+
+            if done_all:
+                st.success("All categories reviewed!")
+                if st.button("✨ Generate Final Itinerary", use_container_width=True):
+                    st.session_state.ai_final = self._generate_final_itinerary(
+                        st.session_state.ai_user_prefs,
+                        st.session_state.ai_travel_info,
+                        st.session_state.ai_like,
+                    )
+                    st.session_state.ai_step = 'final'
+                    st.rerun()
+
+        elif st.session_state.ai_step == 'final':
+            st.markdown("## 🎉 Your AI-Crafted Itinerary")
+            likes = st.session_state.ai_like
+            travel_info = st.session_state.ai_travel_info
+            st.caption(f"Location: {travel_info.get('location')} · Dates: {', '.join(travel_info.get('dates', []))}")
+            # Cards
+            st.markdown("### 🏠 Stays")
+            cols = st.columns(3)
+            for i, _id in enumerate(likes.get('housing', [])[:6]):
+                with cols[i % 3]:
+                    h = housing_id_dict.get(_id)
+                    if h:
+                        st.markdown(f"**{h.get('housing_type','Stay')}** · {h.get('neighborhood', h.get('location',''))}")
+                        st.caption(", ".join(h.get('amenities', [])))
+                        st.code(_id)
+            st.markdown("### 🍽️ Dining")
+            cols = st.columns(3)
+            for i, _id in enumerate(likes.get('cuisine', [])[:6]):
+                with cols[i % 3]:
+                    c = cuisine_id_dict.get(_id)
+                    if c:
+                        st.markdown(f"**{c.get('cuisine_type','Cuisine')}** · {c.get('location','')}")
+                        st.code(_id)
+            st.markdown("### 🎯 Experiences")
+            cols = st.columns(3)
+            for i, _id in enumerate(likes.get('experience', [])[:6]):
+                with cols[i % 3]:
+                    e = experience_id_dict.get(_id)
+                    if e:
+                        st.markdown(f"**{e.get('experience','Experience')}** · {e.get('location','')}")
+                        st.caption(e.get('keyword',''))
+                        st.code(_id)
+
+            if st.button("🔁 Start New Plan", use_container_width=True):
+                st.session_state.ai_step = 'input'
+                st.session_state.ai_like = {'housing': [], 'cuisine': [], 'experience': []}
+                st.session_state.ai_candidates = {'housing_ids': [], 'cuisine_ids': [], 'experience_ids': []}
+                st.rerun()
+
+    def _generate_final_itinerary(self, user_prefs, travel_info, likes_dict):
+        # Simple stub: assign first liked items per day
+        days = travel_info.get('dates', []) or ['Day 1', 'Day 2', 'Day 3']
+        plan = []
+        h = likes_dict.get('housing', [])
+        c = likes_dict.get('cuisine', [])
+        e = likes_dict.get('experience', [])
+        for i, d in enumerate(days):
+            plan.append({
+                'day': d if '-' not in d else d,
+                'housing_id': h[0] if h else None,
+                'cuisine_id': c[i % len(c)] if c else None,
+                'experience_id': e[i % len(e)] if e else None,
+            })
+        return {'days': plan}
 
     def render_step5_cuisine(self):
         """Step 5: Cuisine and restaurant options"""

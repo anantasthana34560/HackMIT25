@@ -9,7 +9,7 @@ from cuisine_listings import cuisine_listings, cuisine_id_dict
 from experience_listings import experience_listings, experience_id_dict
 from pydantic import BaseModel
 from pydantic import BaseModel, ValidationError
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set
 import json
 import os
 
@@ -27,12 +27,11 @@ def filter_cuisine(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
 
 def filter_experiences(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    experience_type = user_preferences["experience_types"]
-    return [e for e in experience_listings if e.get("location") == location and (e.get("experience_type") in experience_type or experience_type == [])]
+    return [e for e in experience_listings if e.get("location") == location and e.get("keyword") in user_preferences["experience_types"]]
 
 def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]):
     location = travel_info["location"]
-    dates = travel_info.get("dates", [])
+    # dates = travel_info.get("dates", [])
     # require all requested dates to be in scheduled_dates
     out = []
     for h in housing_listings:
@@ -40,6 +39,12 @@ def filter_housing(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]
             continue
         # if dates and not all(d in h.get("scheduled_dates", []) for d in dates):
         #     continue
+        if h.get("housing_type") not in user_preferences["housing_type"]:
+            continue
+        # Match amenities from travel_info (desired_amenities)
+        desired = set(travel_info.get("desired_amenities", []))
+        if desired and not desired.intersection(set(h.get("amenities", []))):
+            continue
         out.append(h)
     return out
 
@@ -89,12 +94,13 @@ def build_context(user_preferences: Dict[str, Any], travel_info: Dict[str, Any])
     housing_opts = filter_housing(user_preferences, travel_info)
     cuisine_opts = filter_cuisine(user_preferences, travel_info)
     experience_opts = filter_experiences(user_preferences, travel_info)
-    print(f'housing_opts: {[x['id'] for x in housing_opts]}')
-    print(f'cuisine_opts: {[x['id'] for x in cuisine_opts]}')
-    print(f'experience_opts: {[x['id'] for x in experience_opts]}')
+    # Debug prints (IDs only)
+    print("housing_opts:", [x["id"] for x in housing_opts])
+    print("cuisine_opts:", [x["id"] for x in cuisine_opts])
+    print("experience_opts:", [x["id"] for x in experience_opts])
 
     # Keep context compact (IDs + a few fields). The model only needs IDs to choose.
-    def slim(items, keep=("id", "name", "price", "tags")):
+    def slim(items, keep=("id", "location", "housing_type", "cuisine_type", "experience", "amenities", "safety")):
         return [{k: v for k, v in item.items() if k in keep} for item in items]
 
     ctx = {
@@ -116,63 +122,84 @@ def coerce_to_ListOut(text: str) -> ListOut:
 def ai_travel_agent_agno(user_preferences: Dict[str, Any], travel_info: Dict[str, Any]) -> ListOut:
     context, housing_opts, cuisine_opts, experience_opts = build_context(user_preferences, travel_info)
 
-    # Create the prompt. Put hard schema rules up front.
-    SYSTEM_CONSTRAINTS = """
-Here are the preferences of the user: {user_preferences}
-Here are the travel information of the user: {travel_info}
-Here are the housing options: {housing_opts}
-Here are the cuisine options: {cuisine_opts}
-Here are the experience options: {experience_opts}
+    # Shortlist to reduce hallucination space (top-N by simple preference signals)
+    def score_h(h):
+        score = 0
+        if user_preferences.get("safety_level") and h.get("safety") == user_preferences.get("safety_level"):
+            score += 2
+        desired = set(travel_info.get("desired_amenities", []))
+        score += len(desired.intersection(set(h.get("amenities", []))))
+        return score
+    housing_opts = sorted(housing_opts, key=score_h, reverse=True)[:10]
+    cuisine_opts = cuisine_opts[:10]
+    experience_opts = experience_opts[:10]
 
-You are an opportunities chooser model. You are not planning out the whole trip. Your job is to consider the possible housing, cuisine, and experience options avaialable, and if any of those look reasonably aligned with the user interests, track their ids.
-Do the following
-1. Look through the housing options and what they entail using the view_housing_option tool. If they seem to match the user's preferences, store them in housing_agent using the add_housing_option tool.
-2. Look through the cuisine options and what they entail using the view_cuisine_option tool. If they seem to match the user's preferences, store them in cuisine_agent using the add_cuisine_option tool.
-3. Look through the experience options and what they entail using the view_experience_option tool. If they seem to match the user's preferences, store them in experience_agent using the add_experience_option tool.
+    valid_h: Set[str] = {h["id"] for h in housing_opts}
+    valid_c: Set[str] = {c["id"] for c in cuisine_opts}
+    valid_e: Set[str] = {e["id"] for e in experience_opts}
 
-Note that the housing ids are of the form "H#". The cuisine ids are of the form "C#". The experience ids are of the form "E#".
+    # Few-shot example
+    example_user = {
+        "preferences": {"safety_level": "High", "price_range": [50,150], "cuisine_types": ["Italian"], "experience_types": ["tour"]},
+        "travel_info": {"location": "Boston, USA", "dates": ["2025-02-10"]}
+    }
+    example_options = {
+        "housing": [{"id": "H1", "safety": "High", "amenities": ["WiFi"]}, {"id": "H2", "safety": "Low", "amenities": []}],
+        "cuisine": [{"id": "C1", "cuisine_type": "Italian"}, {"id": "C2", "cuisine_type": "Chinese"}],
+        "experience": [{"id": "E1", "experience": "Freedom Trail Tour"}, {"id": "E2", "experience": "Museum"}]
+    }
+    example_output = {"housing_ids": ["H1"], "cuisine_ids": ["C1"], "experience_ids": ["E1"]}
 
-YOU MUST return output as **JSON ONLY** conforming to this schema:
-{
-  "housing_ids": [],   // str IDs from Housing Options
-  "cuisine_ids": [],   // str IDs from Cuisine Options
-  "experience_ids": [] // str IDs from Experience Options
-}
+    SYSTEM = (
+        "Use only the provided options and return only JSON with housing_ids, cuisine_ids, experience_ids. No prose. "
+        "If none fit, return empty arrays. You MUST call the view_* tools to inspect items before selecting."
+    )
 
-Rules:
-- Use only IDs that appear in the provided options (do not invent IDs).
-- Do not include any extra fields or text.
-- Never return an empty list for any of the fields, except housing_ids.
-- Do not add comments or prose; return a single JSON object only.
-"""
+    USER = {
+        "preferences": user_preferences,
+        "travel_info": travel_info,
+        "housing_options": [{"id": h["id"], "safety": h.get("safety"), "amenities": h.get("amenities", [])} for h in housing_opts],
+        "cuisine_options": [{"id": c["id"], "cuisine_type": c.get("cuisine_type")} for c in cuisine_opts],
+        "experience_options": [{"id": e["id"], "experience": e.get("experience")} for e in experience_opts],
+        "schema": {"housing_ids": [], "cuisine_ids": [], "experience_ids": []},
+        "few_shot_example": {"input": {"user": example_user, "options": example_options}, "output": example_output},
+        "tool_requirement": "Call view_housing_option, view_cuisine_option, and view_experience_option for at least 3 total items before answering.",
+    }
+
+    # Track tool calls
+    global housing_agent, cuisine_agent, experience_agent
+    housing_agent.clear(); cuisine_agent.clear(); experience_agent.clear()
 
     agent = Agent(model=Claude(id="claude-opus-4-1-20250805"))
-    # If Agno supports schema binding directly, keep this:
-    agent.output_schema = ListOut  # (Nice-to-have; we still validate below)
+    agent.output_schema = ListOut
     agent.tools = [view_housing_option, view_cuisine_option, view_experience_option, add_housing_option, add_cuisine_option, add_experience_option]
-    agent.print_response(SYSTEM_CONSTRAINTS)
 
-    # --- Attempt 1
-    # raw = agent.run(prompt).content if hasattr(agent.run(prompt), "content") else agent.run(prompt)
-    # try:
-    #     out = coerce_to_ListOut(raw)
-    # except Exception as e:
-    #     # --- Attempt 2: repair by telling model the exact error and to re-output clean JSON
-    #     repair_prompt = f"""
-    #     The model output the following error: {e}
-    #     Please repair the output and return the correct JSON.
-    #     """
-    #     raw = agent.run(repair_prompt).content if hasattr(agent.run(repair_prompt), "content") else agent.run(repair_prompt)
-    #     try:
-    #         out = coerce_to_ListOut(raw)
-    #     except Exception as e:
-    #         raise ValueError(f"Failed to parse AI response: {e}")
-    # return out
+    try:
+        raw = agent.run(json.dumps(USER), system=SYSTEM)
+        text = raw.content if hasattr(raw, "content") else str(raw)
+        # Enforce minimum tool usage
+        total_tool_uses = len(housing_agent) + len(cuisine_agent) + len(experience_agent)
+        if total_tool_uses < 3:
+            raise RuntimeError("Insufficient tool usage before answering.")
+        out = coerce_to_ListOut(text)
+    except Exception:
+        # Fallback: choose top-3 from whitelists
+        return ListOut(
+            housing_ids=list(valid_h)[:3],
+            cuisine_ids=list(valid_c)[:3],
+            experience_ids=list(valid_e)[:3],
+        )
+
+    # Guardrail: keep only IDs we offered
+    out.housing_ids = [i for i in out.housing_ids if i in valid_h]
+    out.cuisine_ids = [i for i in out.cuisine_ids if i in valid_c]
+    out.experience_ids = [i for i in out.experience_ids if i in valid_e]
+    return out
 
 if __name__ == "__main__":
     from preferences import user_preferences
     from travel_info import travel_info
-    ai_travel_agent_agno(user_preferences, travel_info)
+    print(ai_travel_agent_agno(user_preferences, travel_info))
 
 # def update_user_profile(user_profile, house, liked):
 #     if liked:

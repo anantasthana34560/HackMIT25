@@ -1,10 +1,15 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from dotenv import load_dotenv
 from openai import OpenAI
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from extractor import extract_travel_info
+from app_cool import ai_travel_agent_agno
+from housing_listings import housing_id_dict
+from cuisine_listings import cuisine_id_dict
+from experience_listings import experience_id_dict
 
 # --- Load environment variables ---
 load_dotenv()
@@ -87,6 +92,122 @@ def logout():
 @login_required
 def home():
     return render_template("home.html", user=current_user)
+
+# --- New: start flow from freeform prompt + dates + travelers ---
+@app.route("/start", methods=["POST"]) 
+@login_required
+def start():
+    # Gather inputs
+    freeform_text = request.form.get("freeform_text", "")
+    input_dates = request.form.get("dates", "").strip()
+    travelers = request.form.get("travelers", "").strip()
+
+    # Extract info from freeform text
+    extracted = extract_travel_info(freeform_text or "")
+
+    # Merge dates/travelers overrides
+    if input_dates:
+        # naive split: support comma or slash separated
+        extracted["dates"] = [d.strip() for d in input_dates.replace("/", ",").split(",") if d.strip()]
+    if travelers:
+        extracted["travelers"] = travelers
+
+    # Build user_preferences and travel_info dicts expected by agent
+    user_preferences_dict = {
+        "housing_type": extracted.get("housing_type", []) or ["House", "Apartment", "Hotel"],
+        "preferred_amenities": extracted.get("desired_amenities", []),
+        "safety_level": extracted.get("safety_level") or "High",
+        "price_range": extracted.get("price_range", [50, 150]),
+        "cuisine_types": [c.capitalize() for c in extracted.get("cuisine_types", [])],
+        "experience_types": [e.capitalize() for e in extracted.get("experience_types", [])],
+    }
+
+    travel_info_dict = {
+        "location": extracted.get("location") or request.form.get("destination") or "Boston, USA",
+        "dates": extracted.get("dates", []),
+        "desired_amenities": extracted.get("desired_amenities", []),
+        "travelers": extracted.get("travelers") or travelers or 1,
+        "cuisine_preferences": user_preferences_dict["cuisine_types"],
+        "experience_preferences": user_preferences_dict["experience_types"],
+    }
+
+    # Run agent
+    recs = ai_travel_agent_agno(user_preferences_dict, travel_info_dict)
+
+    # Persist for swipe phase
+    session["travel_info_dict"] = travel_info_dict
+    session["user_preferences_dict"] = user_preferences_dict
+    session["candidates"] = {
+        "housing_ids": recs.housing_ids,
+        "cuisine_ids": recs.cuisine_ids,
+        "experience_ids": recs.experience_ids,
+    }
+    session["likes"] = {"housing": [], "cuisine": [], "experience": []}
+    session["dislikes"] = {"housing": [], "cuisine": [], "experience": []}
+
+    return redirect(url_for("swipe"))
+
+
+@app.route("/swipe", methods=["GET"])
+@login_required
+def swipe():
+    candidates = session.get("candidates", {"housing_ids": [], "cuisine_ids": [], "experience_ids": []})
+    housing_cards = [housing_id_dict[i] for i in candidates.get("housing_ids", []) if i in housing_id_dict]
+    cuisine_cards = [cuisine_id_dict[i] for i in candidates.get("cuisine_ids", []) if i in cuisine_id_dict]
+    experience_cards = [experience_id_dict[i] for i in candidates.get("experience_ids", []) if i in experience_id_dict]
+    return render_template("swipe_interface.html", housing_cards=housing_cards, cuisine_cards=cuisine_cards, experience_cards=experience_cards)
+
+
+@app.route("/swipe/action", methods=["POST"]) 
+@login_required
+def swipe_action():
+    item_id = request.form.get("id")
+    kind = request.form.get("kind")  # housing|cuisine|experience
+    action = request.form.get("action")  # like|dislike
+    if not item_id or kind not in ("housing", "cuisine", "experience") or action not in ("like", "dislike"):
+        return ("bad request", 400)
+    likes = session.get("likes", {"housing": [], "cuisine": [], "experience": []})
+    dislikes = session.get("dislikes", {"housing": [], "cuisine": [], "experience": []})
+    if action == "like":
+        if item_id not in likes[kind]:
+            likes[kind].append(item_id)
+        if item_id in dislikes[kind]:
+            dislikes[kind].remove(item_id)
+    else:
+        if item_id not in dislikes[kind]:
+            dislikes[kind].append(item_id)
+        if item_id in likes[kind]:
+            likes[kind].remove(item_id)
+    session["likes"] = likes
+    session["dislikes"] = dislikes
+    return ("ok", 200)
+
+
+@app.route("/finalize", methods=["POST"]) 
+@login_required
+def finalize():
+    likes = session.get("likes", {"housing": [], "cuisine": [], "experience": []})
+    travel_info_dict = session.get("travel_info_dict", {})
+
+    # Build display cards from likes
+    housing_cards = [housing_id_dict[i] for i in likes.get("housing", []) if i in housing_id_dict]
+    cuisine_cards = [cuisine_id_dict[i] for i in likes.get("cuisine", []) if i in cuisine_id_dict]
+    experience_cards = [experience_id_dict[i] for i in likes.get("experience", []) if i in experience_id_dict]
+
+    # TODO: call second agent to assemble final itinerary from likes
+    final_plan = {
+        "days": [
+            {
+                "title": "Day 1",
+                "housing": housing_cards[:1],
+                "dining": cuisine_cards[:1],
+                "experience": experience_cards[:1],
+            }
+        ],
+        "notes": "Prototype itinerary assembled from your likes."
+    }
+
+    return render_template("final_results.html", plan=final_plan, housing_cards=housing_cards, cuisine_cards=cuisine_cards, experience_cards=experience_cards, travel_info=travel_info_dict)
 
 @app.route("/plan", methods=["POST"])
 @login_required
