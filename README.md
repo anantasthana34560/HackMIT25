@@ -12,3 +12,5 @@ Step 2: Your Home Away from Home
 Step 3: Cuisine Options
 Step 4: Experiences
 Step 5: Full Travel Plan/Itinerary
+
+Built with Yuga Patel and Ditya Nagri @ MIT
